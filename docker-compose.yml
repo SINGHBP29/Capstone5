@@ -1,0 +1,106 @@
+services:
+  mysql:
+    image: mariadb:10.6
+    container_name: diffy-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=diffy
+      - MYSQL_USER=diffy
+      - MYSQL_PASSWORD=diffy
+    volumes:
+      - diffy-mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: diffy-redis
+    ports:
+      - "6379:6379"
+
+  diffy:
+    platform: linux/amd64
+    image: diffy/diffy
+    container_name: diffy-server
+    ports:
+      - "8888:8888" # API Port
+      - "8880:8880" # UI/Dashboard Port
+      - "8881:8881" # Admin Port
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - "diffy.master.primary=localhost:9990" # Not used, but required
+      - "diffy.master.secondary=localhost:9991" # Not used, but required
+      - "diffy.master.candidate=localhost:9992" # Not used, but required
+      - "diffy.database.host=mysql"
+      - "diffy.database.name=diffy"
+      - "diffy.database.user=diffy"
+      - "diffy.database.password=diffy"
+      - "redis.host=redis"
+    volumes:
+      - ./diffy/diffy.properties:/app/diffy.properties
+
+  autocomplete:
+    build:
+      context: .
+      dockerfile: docker/autocomplete.Dockerfile
+    container_name: autocomplete-agent
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - .:/app
+    depends_on:
+      - temporal-server
+
+  semantic:
+    build:
+      context: .
+      dockerfile: docker/semantic.Dockerfile
+    container_name: semantic-agent
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - .:/app
+    depends_on:
+      - temporal-server
+
+  feedback_agent:
+    build:
+      context: ./feedback_agent
+      dockerfile: Dockerfile
+    container_name: feedback-agent
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./feedback_agent:/app
+    ports:
+      - "8000:8000" # Assuming FastAPI or similar on port 8000
+
+  temporal-server:
+    image: temporalio/server:1.20.0
+    container_name: temporal-server
+    ports:
+      - "7233:7233" # gRPC frontend
+      - "8080:8080" # UI
+    environment:
+      - DYNAMIC_CONFIG_FILE_PATH=/etc/temporal/config/dynamicconfig/development.yaml
+      - TEMPORAL_CLI_ADDRESS=temporal-server:7233
+    volumes:
+      - ./temporal-config:/etc/temporal/config # For custom config if needed
+
+  temporal-worker:
+    build:
+      context: .
+      dockerfile: temporal/Dockerfile
+    container_name: temporal-worker
+    environment:
+      - TEMPORAL_GRPC_ENDPOINT=temporal-server:7233
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - .:/app
+    depends_on:
+      - temporal-server
+
+volumes:
+  diffy-mysql-data:

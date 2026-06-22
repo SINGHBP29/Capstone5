@@ -1,0 +1,39 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.env
+
+# Virtual environments
+.venv
+
+## Files and Folder
+.vscode/
+logs/
+temporal/agents.py
+temporal/cat_start_workflow.py
+temporal/cat_workflow.py
+temporal/cat_workflow_test.py
+temporal/catalog_workflow.py
+temporal/catalog_workflows.py
+temporal/catalog_activities.py
+
+Merchandising/
+
+adk_test.py
+**.json
+base2_agent.py
+base3_agent.py
+base4_agent.py
+
+inpect_fast_rlm.py
+inspect_rlm_prompt.py
+list_models_debug.py
+list_models.py
+local_agent_base.py
+
+test_api.py
+
