@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-primary
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+      track: primary
+  template:
+    metadata:
+      labels:
+        app: my-app
+        track: primary
+    spec:
+      containers:
+      - name: my-app
+        image: your-app-image:v1.0
+        ports:
+        - containerPort: 8080

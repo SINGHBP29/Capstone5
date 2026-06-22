@@ -1,0 +1,20 @@
+[project]
+name = "capstone5"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.11.*"
+dependencies = [
+    "langchain",
+    "google-genai",
+    "python-dotenv",
+    "fast-rlm",
+    "pydantic",
+    "google-cloud-aiplatform",
+    "lancedb",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "ranx",
+    "fastapi>=0.137.1",
+]

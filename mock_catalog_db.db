@@ -1,0 +1,65 @@
+[
+    {
+        "sku": "TH-XT-001",
+        "brand": "Trailhead XT",
+        "category": "Footwear",
+        "waterproof_flag": true,
+        "terrain_type": "trail",
+        "status": "active",
+        "updated_at": "2026-06-16T07:05:31Z"
+    },
+    {
+        "sku": "TH-XT-002",
+        "brand": "Trailhead XT",
+        "category": "Footwear",
+        "waterproof_flag": true,
+        "terrain_type": "trail",
+        "status": "inactive",
+        "updated_at": "2026-06-16T07:05:31Z"
+    },
+    {
+        "sku": "TH-XT-003",
+        "brand": "Trailhead XT",
+        "category": "Footwear",
+        "waterproof_flag": true,
+        "terrain_type": "trail",
+        "status": "active",
+        "updated_at": "2026-06-16T07:05:31Z"
+    },
+    {
+        "sku": "SW-100",
+        "brand": "Summit Wear",
+        "category": "Footwear",
+        "waterproof_flag": false,
+        "terrain_type": "urban",
+        "status": "active",
+        "updated_at": "2026-06-12T08:00:00Z"
+    },
+    {
+        "sku": "SW-101",
+        "brand": "Summit Wear",
+        "category": "Footwear",
+        "waterproof_flag": null,
+        "terrain_type": "trail",
+        "status": "active",
+        "updated_at": "2026-06-12T08:00:00Z"
+    },
+    {
+        "sku": "AL-200",
+        "brand": "Alpine Line",
+        "category": "Apparel",
+        "waterproof_flag": true,
+        "terrain_type": null,
+        "status": "active",
+        "updated_at": "2026-06-11T14:30:00Z"
+    },
+    {
+        "sku": "AL-201",
+        "brand": "Alpine Line",
+        "category": "Apparel",
+        "waterproof_flag": true,
+        "terrain_type": "mountain",
+        "status": "inactive",
+        "updated_at": "2026-06-10T09:15:00Z"
+    }
+]

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Diagram Preview</title>
+  <style>
+    :root {
+      --bg: #f6f4ee;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #667085;
+      --border: #d9d4c7;
+      --accent: #2f5d62;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #faf8f2 0%, #f1eee5 100%);
+      color: var(--text);
+    }
+    header {
+      padding: 32px 24px 8px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(31, 41, 51, 0.06);
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .card .file {
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 10px;
+      border: 1px solid #ece7db;
+      background: #fff;
+    }
+    .footer {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    code {
+      background: rgba(47, 93, 98, 0.08);
+      padding: 0 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Agent Diagram Preview</h1>
+    <p>Rendered from the Mermaid sources in <code>agent_diagrams/</code>. The preview focuses on the real runtime paths and marks the legacy or broken branches separately.</p>
+  </header>
+
+  <section class="grid">
+    <article class="card">
+      <h2>Catalog Deep Flow</h2>
+      <div class="file">rendered/catalog_deep_flow.png</div>
+      <img src="rendered/catalog_deep_flow.png" alt="Catalog deep flow diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Autocomplete Deep Flow</h2>
+      <div class="file">rendered/autocomplete_deep_flow.png</div>
+      <img src="rendered/autocomplete_deep_flow.png" alt="Autocomplete deep flow diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Merchandising Deep Flow</h2>
+      <div class="file">rendered/merchandising_deep_flow.png</div>
+      <img src="rendered/merchandising_deep_flow.png" alt="Merchandising deep flow diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Semantic Deep Flow</h2>
+      <div class="file">rendered/semantic_deep_flow.png</div>
+      <img src="rendered/semantic_deep_flow.png" alt="Semantic deep flow diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Scenario RootCause + Fix</h2>
+      <div class="file">rendered/scenario_rootcause_fix_map.png</div>
+      <img src="rendered/scenario_rootcause_fix_map.png" alt="Scenario root cause and fix proposal diagram" />
+    </article>
+
+    <article class="card">
+      <h2>BaseAgent Inheritance</h2>
+      <div class="file">rendered/baseagent_inheritance.png</div>
+      <img src="rendered/baseagent_inheritance.png" alt="BaseAgent inheritance diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Catalog Runtime</h2>
+      <div class="file">rendered/catalog_runtime.png</div>
+      <img src="rendered/catalog_runtime.png" alt="Catalog runtime diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Catalog Variants</h2>
+      <div class="file">rendered/catalog_variants.png</div>
+      <img src="rendered/catalog_variants.png" alt="Catalog variants diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Autocomplete Runtime</h2>
+      <div class="file">rendered/autocomplete_runtime.png</div>
+      <img src="rendered/autocomplete_runtime.png" alt="Autocomplete runtime diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Merchandising Runtime</h2>
+      <div class="file">rendered/merchandising_runtime.png</div>
+      <img src="rendered/merchandising_runtime.png" alt="Merchandising runtime diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Semantic Runtime</h2>
+      <div class="file">rendered/semantic_runtime.png</div>
+      <img src="rendered/semantic_runtime.png" alt="Semantic runtime diagram" />
+    </article>
+
+    <article class="card">
+      <h2>Temporal Runtime</h2>
+      <div class="file">rendered/temporal_runtime.png</div>
+      <img src="rendered/temporal_runtime.png" alt="Temporal runtime diagram" />
+    </article>
+  </section>
+
+  <div class="footer">
+    For the source Mermaid definitions, see the corresponding <code>.md</code> files in <code>agent_diagrams/</code>.
+  </div>
+</body>
+</html>

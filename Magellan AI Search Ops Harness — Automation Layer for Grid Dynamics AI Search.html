@@ -1,0 +1,4406 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Magellan AI Search Ops Harness: a technical brief for ecommerce search platform leads evaluating ops automation around Grid Dynamics AI Search.">
+<meta name="theme-color" content="#F2EDE1">
+<meta property="og:title" content="Magellan AI Search Ops Harness">
+<meta property="og:description" content="An ops automation control plane for Grid Dynamics AI Search runbooks, evals, canaries, and rollback.">
+<meta name="twitter:card" content="summary">
+<title>Magellan AI Search Ops Harness — Automation Layer for Grid Dynamics AI Search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./Magellan AI Search Ops Harness — Automation Layer for Grid Dynamics AI Search_files/css2" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════════ */
+:root {
+  --orange: #7A2E1E;
+  --orange-light: #D4A017;
+  --orange-dim: rgba(122,46,30,0.12);
+  --orange-glow: rgba(122,46,30,0.25);
+  --amber: #B8860B;
+  --rose: #7A2E1E;
+  --cyan: #265D6B;
+  --navy: #0F0E0C;
+  --navy-deep: #1B1A18;
+  --navy-mid: #2B3E5B;
+  --teal: #265D6B;
+  --teal-dim: rgba(38,93,107,0.12);
+  --teal-glow: rgba(38,93,107,0.25);
+  --indigo: #3D4A2E;
+  --indigo-dim: rgba(61,74,46,0.12);
+  --emerald: #3D4A2E;
+  --emerald-dim: rgba(61,74,46,0.12);
+  --white: #F2EDE1;
+  --off-white: #F2EDE1;
+  --gray-100: #EDE5D3;
+  --gray-200: #E5DCC5;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #6B6558;
+  --gray-600: #6B6558;
+  --gray-700: #2A2621;
+  --gray-800: #1E293B;
+  --ink: #172033;
+  --shadow-sm: 0 10px 30px rgba(15,14,12, 0.08);
+  --shadow-md: 0 18px 48px rgba(15,14,12, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --section-gap: 8rem;
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; font-size: 16px; }
+body {
+  font-family: var(--sans);
+  color: var(--gray-700);
+  background:
+    linear-gradient(180deg, #F8FAFC 0%, #F3F6FA 46%, #F2EDE1 100%);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+a { color: var(--orange); text-decoration: none; transition: color .2s; }
+a:hover { color: var(--orange-light); }
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 3px solid rgba(38,93,107,0.45);
+  outline-offset: 3px;
+}
+::selection { background: rgba(122,46,30,0.2); color: var(--navy-deep); }
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 2000;
+  transform: translateY(-160%);
+  -webkit-transform: translateY(-160%);
+  background: var(--white);
+  color: var(--navy);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+.skip-link:focus {
+  transform: translateY(0);
+  -webkit-transform: translateY(0);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ═══════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+   ═══════════════════════════════════════════ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.018;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT PRIMITIVES
+   ═══════════════════════════════════════════ */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.narrow { max-width: 820px; margin: 0 auto; }
+section { padding: var(--section-gap) 0; position: relative; }
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-top: 0.75rem;
+}
+.section-kicker::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 0 5px var(--emerald-dim);
+}
+
+/* ═══════════════════════════════════════════
+   SCROLL-REVEAL ANIMATIONS
+   ═══════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════ */
+.section-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.section-label::before {
+  content: '';
+  width: 2rem;
+  height: 2px;
+  background: var(--orange);
+}
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  color: var(--navy);
+  line-height: 1.15;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.02em;
+}
+h3 {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--navy);
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+.lead {
+  font-size: 1.15rem;
+  color: var(--gray-600);
+  max-width: 620px;
+  line-height: 1.75;
+}
+.stat-number {
+  font-family: var(--serif);
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION BAR
+   ═══════════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(15,14,12,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(242,237,225,0.06);
+  transition: transform 0.35s, background 0.25s;
+}
+nav .nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+nav .brand {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.11em;
+  color: rgba(242,237,225,0.68);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+nav .brand strong { color: var(--orange); font-weight: 600; }
+nav .nav-links { display: flex; gap: 1.1rem; align-items: center; }
+nav .nav-links a {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(242,237,225,0.58);
+  letter-spacing: 0.03em;
+  padding: 0.4rem 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+nav .nav-links a:hover,
+nav .nav-links a.active {
+  color: var(--white);
+  border-bottom-color: var(--orange);
+}
+.scroll-progress {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--orange), var(--teal), var(--emerald));
+  transition: width 0.08s linear;
+}
+@media (max-width: 980px) {
+  nav .nav-links { display: none; }
+  nav .brand { font-size: 0.66rem; white-space: normal; line-height: 1.4; }
+}
+
+/* ═══════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════ */
+.hero {
+  min-height: 94vh;
+  background:
+    linear-gradient(180deg, rgba(15,14,12,0.72) 0%, rgba(15,14,12,0.9) 62%, rgba(15,14,12,1) 100%),
+    radial-gradient(circle at 72% 18%, rgba(38,93,107,0.2), transparent 32%),
+    radial-gradient(circle at 16% 82%, rgba(122,46,30,0.2), transparent 36%),
+    var(--navy-deep);
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+  padding: 8rem 0 6.5rem;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(242,237,225,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242,237,225,0.045) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(15,14,12,0.9), transparent 92%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34%;
+  background: linear-gradient(180deg, transparent, rgba(15,14,12,0.96));
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  width: 100%;
+}
+.hero-text { max-width: 820px; }
+.hero-text .eyebrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 1.2rem;
+}
+.hero-text h1 {
+  font-family: var(--serif);
+  font-size: clamp(3rem, 7vw, 6.8rem);
+  color: var(--white);
+  line-height: 0.96;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+  max-width: 920px;
+}
+.hero-text h1 em {
+  font-style: italic;
+  color: var(--orange);
+}
+.hero-text .subtitle {
+  font-size: clamp(1.05rem, 1.8vw, 1.28rem);
+  color: rgba(107,101,88,0.86);
+  line-height: 1.7;
+  margin-bottom: 1.6rem;
+  max-width: 680px;
+}
+.hero-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  padding: 0.42rem 0.78rem;
+  border-radius: 100px;
+  border: 1px solid rgba(242,237,225,0.16);
+  color: rgba(107,101,88,0.82);
+  background: rgba(242,237,225,0.06);
+  backdrop-filter: blur(10px);
+}
+.hero-visual {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.ops-stage {
+  position: absolute;
+  inset: 6rem 2rem 2.5rem auto;
+  width: min(56vw, 760px);
+  min-width: 620px;
+  opacity: 0.9;
+}
+.ops-card {
+  position: absolute;
+  background: rgba(242,237,225,0.08);
+  border: 1px solid rgba(242,237,225,0.14);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 80px rgba(15,14,12,0.2);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: var(--white);
+}
+.ops-card h4 {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(242,237,225,0.64);
+  margin-bottom: 0.75rem;
+}
+.ops-search {
+  top: 4%;
+  right: 10%;
+  width: 420px;
+  padding: 1.2rem;
+}
+.ops-query {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background: rgba(242,237,225,0.12);
+  border-radius: 999px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  color: rgba(242,237,225,0.88);
+}
+.ops-query .lens {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.ops-pipeline {
+  top: 28%;
+  right: 0;
+  width: 520px;
+  padding: 1.1rem;
+}
+.ops-pipeline-row {
+  display: grid;
+  grid-template-columns: 82px 1fr 56px;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.62rem 0;
+  border-top: 1px solid rgba(242,237,225,0.08);
+}
+.ops-pipeline-row:first-of-type { border-top: 0; }
+.ops-label {
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  letter-spacing: 0.08em;
+  color: rgba(242,237,225,0.7);
+  text-transform: uppercase;
+}
+.ops-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(242,237,225,0.12);
+  overflow: hidden;
+}
+.ops-bar span {
+  display: block;
+  height: 100%;
+  width: var(--w);
+  background: linear-gradient(90deg, var(--orange), var(--teal));
+  border-radius: inherit;
+}
+.ops-score {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--emerald);
+  text-align: right;
+}
+.ops-metric {
+  left: 8%;
+  bottom: 12%;
+  width: 210px;
+  padding: 1.1rem;
+}
+.ops-metric strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--white);
+}
+.ops-metric span {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: rgba(107,101,88,0.72);
+}
+.ops-node {
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: rgba(122,46,30,0.18);
+  border: 1px solid rgba(122,46,30,0.42);
+  box-shadow: 0 0 70px rgba(122,46,30,0.2);
+  color: var(--white);
+  top: 54%;
+  left: 36%;
+  transform: translate(-50%, -50%);
+}
+.ops-node strong {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+.ops-node span {
+  font-family: var(--mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(242,237,225,0.7);
+}
+.ops-link {
+  position: absolute;
+}
+.ops-link::before,
+.ops-link::after {
+  content: '';
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(122,46,30,0), rgba(122,46,30,0.55), rgba(38,93,107,0));
+  transform-origin: left;
+}
+.ops-link::before {
+  width: 330px;
+  top: 41%;
+  left: 35%;
+  transform: rotate(-16deg);
+}
+.ops-link::after {
+  width: 290px;
+  top: 59%;
+  left: 31%;
+  transform: rotate(19deg);
+}
+.hero-actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin: 2rem 0 1.6rem;
+}
+.hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: 1px solid rgba(242,237,225,0.2);
+  color: var(--white);
+  background: rgba(242,237,225,0.08);
+  backdrop-filter: blur(10px);
+}
+.hero-action.primary {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: var(--white);
+}
+.hero-action:hover { color: var(--white); transform: translateY(-1px); }
+.hero-proofline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: rgba(107,101,88,0.74);
+  font-size: 0.82rem;
+}
+.hero-proofline span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.hero-proofline span::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--emerald);
+}
+@media (max-width: 1100px) {
+  .ops-stage { opacity: 0.42; right: -16rem; }
+}
+@media (max-width: 760px) {
+  .container { padding: 0 1.25rem; }
+  section { padding: 4.75rem 0; }
+  h2 {
+    font-size: clamp(1.85rem, 8vw, 2.35rem);
+    overflow-wrap: break-word;
+  }
+  h3, p, .lead { overflow-wrap: break-word; }
+  .lead { font-size: 1rem; max-width: 100%; }
+  .hero {
+    min-height: auto;
+    padding: 7rem 0 4.5rem;
+  }
+  .hero-content { padding: 0 1.25rem; }
+  .hero-text,
+  .hero-actions,
+  .hero-tags,
+  .hero-proofline {
+    max-width: 21.5rem;
+  }
+  .hero-text .eyebrow {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    line-height: 1.75;
+  }
+  .hero-text h1 {
+    font-size: clamp(2rem, 9vw, 2.35rem);
+    line-height: 1.03;
+    overflow-wrap: break-word;
+  }
+  .hero-text .subtitle {
+    font-size: 1rem;
+    max-width: 21.5rem;
+    overflow-wrap: break-word;
+  }
+  .hero-tags { gap: 0.45rem; }
+  .hero-tag { font-size: 0.58rem; }
+  .ops-stage { display: none; }
+  .hero-actions { margin-top: 1.5rem; }
+  .hero-action {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .hero-proofline {
+    display: grid;
+    gap: 0.45rem;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   STAT CARDS
+   ═══════════════════════════════════════════ */
+.stats-bar {
+  background: var(--white);
+  border-top: 3px solid var(--orange);
+  margin-top: -3.4rem;
+  position: relative;
+  z-index: 5;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.stat-card {
+  padding: 2.25rem 2rem;
+  text-align: center;
+  border-right: 1px solid var(--gray-100);
+  transition: background 0.3s;
+}
+.stat-card:last-child { border-right: none; }
+.stat-card:hover { background: var(--gray-100); }
+.stat-card .stat-number { color: var(--orange); margin-bottom: 0.25rem; }
+.stat-card .stat-label {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+.stat-card .stat-note {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--gray-400);
+  text-transform: uppercase;
+}
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-card:nth-child(2) { border-right: none; }
+}
+@media (max-width: 520px) {
+  .stats-bar { margin-top: -1.5rem; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat-card {
+    padding: 1.5rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .stat-card:last-child { border-bottom: none; }
+  .stat-card .stat-number { font-size: 2.55rem; }
+}
+
+/* ═══════════════════════════════════════════
+   OPERATING MODEL
+   ═══════════════════════════════════════════ */
+.operating-model {
+  padding-top: 5.5rem;
+  padding-bottom: 3rem;
+}
+.model-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.model-summary {
+  position: sticky;
+  top: 96px;
+}
+.model-summary h2 { margin-bottom: 1rem; }
+.model-points {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 2rem;
+}
+.model-point {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  padding: 1rem;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(15,14,12,0.04);
+}
+.model-point strong {
+  display: block;
+  color: var(--navy);
+  line-height: 1.25;
+  margin-bottom: 0.25rem;
+}
+.model-point p {
+  color: var(--gray-500);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.icon-chip {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--accent, var(--orange));
+  background: color-mix(in srgb, var(--accent, var(--orange)) 14%, white);
+  border: 1px solid color-mix(in srgb, var(--accent, var(--orange)) 24%, white);
+}
+.model-board {
+  display: grid;
+  gap: 1rem;
+}
+.model-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 138px 1fr;
+  gap: 1rem;
+  align-items: stretch;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  box-shadow: 0 8px 28px rgba(15,14,12,0.05);
+}
+.model-stage::before {
+  content: attr(data-step);
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--gray-400);
+}
+.stage-name {
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  background: var(--accent, var(--orange));
+  color: var(--white);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 0.75rem;
+}
+.stage-detail h3 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0 0 0.4rem;
+}
+.stage-detail p {
+  font-size: 0.88rem;
+  line-height: 1.58;
+  color: var(--gray-500);
+  max-width: 570px;
+}
+.stage-detail ul {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  list-style: none;
+}
+.stage-detail li {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  padding: 0.26rem 0.48rem;
+  border-radius: 999px;
+  color: var(--gray-600);
+  background: var(--gray-100);
+}
+@media (max-width: 900px) {
+  .model-grid { grid-template-columns: 1fr; }
+  .model-summary { position: static; }
+}
+@media (max-width: 620px) {
+  .model-stage { grid-template-columns: 1fr; }
+  .stage-name { min-height: 72px; justify-content: flex-start; }
+}
+
+/* ═══════════════════════════════════════════
+   USE CASE CARDS
+   ═══════════════════════════════════════════ */
+.usecase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+.usecase-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--gray-200);
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.usecase-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--orange));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(.16,1,.3,1);
+}
+.usecase-card:hover::before { transform: scaleX(1); }
+.usecase-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(15,14,12,0.06);
+  border-color: transparent;
+}
+.usecase-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+.usecase-card h4 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+.usecase-card p {
+  font-size: 0.88rem;
+  color: var(--gray-500);
+  line-height: 1.6;
+}
+@media (max-width: 768px) {
+  .usecase-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   SCENARIO FLOW
+   ═══════════════════════════════════════════ */
+.scenario-flow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin: 3rem 0;
+  position: relative;
+}
+.scenario-flow::before {
+  content: '';
+  position: absolute;
+  top: 44px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--orange), var(--teal), var(--emerald), var(--indigo));
+}
+.flow-step {
+  text-align: center;
+  position: relative;
+  padding: 0 1rem;
+}
+.flow-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin: 30px auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--white);
+  font-weight: 700;
+  position: relative;
+  z-index: 2;
+}
+.flow-step h4 {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.flow-step p {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════
+   SCENARIO DETAIL CARDS
+   ═══════════════════════════════════════════ */
+.scenario-detail {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  transition: box-shadow 0.3s;
+}
+.scenario-detail:hover { box-shadow: 0 8px 32px rgba(15,14,12,0.06); }
+.scenario-detail-header {
+  padding: 1.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+.scenario-badge {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.scenario-detail-body {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.scenario-col {
+  padding: 1.5rem;
+  border-right: 1px solid var(--gray-100);
+  transition: background 0.2s;
+}
+.scenario-col:last-child { border-right: none; }
+.scenario-col:hover { background: var(--gray-100); }
+.scenario-col-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.scenario-col p { font-size: 0.85rem; color: var(--gray-600); line-height: 1.6; }
+@media (max-width: 768px) {
+  .scenario-flow { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+  .scenario-flow::before { display: none; }
+  .scenario-detail-body { grid-template-columns: 1fr; }
+  .scenario-col { border-right: none; border-bottom: 1px solid var(--gray-100); }
+}
+
+/* ═══════════════════════════════════════════
+   DATA FLOW LAYERS
+   ═══════════════════════════════════════════ */
+.dataflow-layers {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.df-layer {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  align-items: center;
+  background: var(--white);
+  border-radius: 10px;
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: default;
+}
+.df-layer:hover {
+  transform: translateX(8px);
+  box-shadow: 0 4px 20px rgba(15,14,12,0.05);
+}
+.df-layer-name {
+  padding: 1.25rem 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.df-layer-name .icon { font-size: 1.1rem; }
+.df-layer-name .icon,
+.feedback-loop .icon {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.df-layer-content {
+  padding: 1.25rem 1.5rem;
+  font-size: 0.88rem;
+  color: var(--gray-600);
+}
+.df-arrow {
+  text-align: center;
+  color: var(--gray-300);
+  font-size: 1.2rem;
+  padding: 0.25rem 0;
+}
+@media (max-width: 768px) {
+  .df-layer { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   CONTEXT ENGINEERING
+   ═══════════════════════════════════════════ */
+.context-blocks {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ctx-block {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  background: var(--white);
+  border-radius: 8px;
+  border-left: 4px solid;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ctx-block:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 16px rgba(15,14,12,0.04);
+}
+.ctx-label {
+  padding: 1rem 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+.ctx-content {
+  padding: 1rem 1.5rem;
+  font-size: 0.88rem;
+  color: var(--gray-600);
+  border-left: 1px solid var(--gray-100);
+}
+
+/* Two-panel layout */
+.two-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+.panel {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  padding: 2rem;
+}
+.panel h4 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.panel ol, .panel ul {
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.panel li {
+  font-size: 0.88rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+.panel li::marker { color: var(--orange); }
+@media (max-width: 768px) {
+  .two-panel { grid-template-columns: 1fr; }
+  .ctx-block { grid-template-columns: 1fr; }
+  .ctx-label { border-bottom: 1px solid var(--gray-100); }
+}
+
+/* Call-out box */
+.callout {
+  background: var(--orange-dim);
+  border-left: 4px solid var(--orange);
+  border-radius: 0 10px 10px 0;
+  padding: 1.25rem 1.5rem;
+  margin-top: 2rem;
+}
+.callout-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--orange);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.callout p { font-size: 0.9rem; color: var(--gray-700); }
+
+/* ═══════════════════════════════════════════
+   USER FLOW HORIZONTAL
+   ═══════════════════════════════════════════ */
+.userflow-steps {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  margin-top: 3rem;
+}
+.uf-step {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.uf-step:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(15,14,12,0.06);
+  border-color: var(--step-color, var(--orange));
+}
+.uf-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--step-color, var(--orange));
+  border-radius: 12px 12px 0 0;
+}
+.uf-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+.uf-step h5 {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.uf-step p {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+}
+@media (max-width: 900px) {
+  .userflow-steps { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .userflow-steps { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═══════════════════════════════════════════
+   SEQUENCE DIAGRAM
+   ═══════════════════════════════════════════ */
+.seq-diagram {
+  margin-top: 3rem;
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  padding: 2rem;
+  overflow-x: auto;
+  box-shadow: 0 8px 30px rgba(15,14,12,0.04);
+}
+.seq-actors {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  min-width: 780px;
+}
+.seq-actor {
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 8px;
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+.seq-actor:hover { transform: scale(1.05); }
+.seq-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 1rem;
+  min-width: 780px;
+}
+.seq-msg {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: center;
+  min-height: 36px;
+  position: relative;
+}
+.seq-msg-arrow {
+  grid-column-start: var(--from);
+  grid-column-end: var(--to);
+  height: 2px;
+  background: var(--gray-300);
+  position: relative;
+  margin: 0 1.5rem;
+}
+.seq-msg-arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  border: 5px solid transparent;
+  border-left: 6px solid var(--gray-400);
+}
+.seq-msg-arrow.reverse::after {
+  right: auto;
+  left: -1px;
+  border-left: none;
+  border-right: 6px solid var(--gray-400);
+}
+.seq-msg-label {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--gray-600);
+  white-space: nowrap;
+  background: var(--white);
+  padding: 0 0.3rem;
+}
+
+/* ═══════════════════════════════════════════
+   UI MOCKUPS
+   ═══════════════════════════════════════════ */
+.ui-mockup {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  margin-top: 2rem;
+  box-shadow: 0 4px 32px rgba(15,14,12,0.04);
+}
+.ui-titlebar {
+  background: var(--gray-100);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+.ui-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.ui-body { padding: 1.5rem; }
+.ui-search-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1rem;
+}
+.ui-search-bar input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px 0 0 8px;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  outline: none;
+  background: var(--gray-100);
+}
+.ui-search-bar button {
+  padding: 0.75rem 1.5rem;
+  background: var(--orange);
+  color: var(--white);
+  border: none;
+  border-radius: 0 8px 8px 0;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ui-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.ui-badge {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+}
+.ui-results {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1.5rem;
+}
+.ui-facets h5 {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+.ui-facet-item {
+  padding: 0.4rem 0;
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  border-bottom: 1px solid var(--gray-100);
+}
+.ui-products {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.ui-product {
+  background: var(--gray-100);
+  border-radius: 10px;
+  padding: 1rem;
+  transition: transform 0.2s;
+}
+.ui-product:hover { transform: translateY(-2px); }
+.ui-product-img {
+  width: 100%;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 68% 24%, rgba(242,237,225,0.66), transparent 24%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent, var(--orange)) 42%, white), color-mix(in srgb, var(--accent, var(--orange)) 10%, white));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--accent, var(--orange)) 72%, black);
+  margin-bottom: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+.ui-product-img::before {
+  content: '';
+  position: absolute;
+  width: 70%;
+  height: 22%;
+  border-radius: 999px 999px 24px 24px;
+  background: rgba(242,237,225,0.62);
+  bottom: 28%;
+  left: 15%;
+  transform: skewX(-16deg);
+}
+.ui-product-img span {
+  position: relative;
+  z-index: 1;
+}
+.ui-product h6 { font-size: 0.82rem; color: var(--navy); font-weight: 600; margin-bottom: 0.25rem; }
+.ui-product .price { font-size: 0.85rem; color: var(--orange); font-weight: 700; }
+.ui-product .match {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--emerald);
+  margin-top: 0.25rem;
+}
+@media (max-width: 768px) {
+  .ui-results { grid-template-columns: 1fr; }
+  .ui-products { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═══════════════════════════════════════════
+   ENHANCED SEQUENCE DIAGRAMS
+   ═══════════════════════════════════════════ */
+.seq-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.seq-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.seq-legend span {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+}
+.seq-diagram {
+  margin-top: 2.25rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.seq-diagram + .seq-diagram { margin-top: 2rem; }
+.seq-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--gray-200);
+  background: linear-gradient(180deg, var(--white), var(--gray-100));
+}
+.seq-titlebar h3 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+}
+.seq-titlebar span {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+.seq-scroll {
+  overflow-x: auto;
+  background:
+    linear-gradient(90deg, rgba(242,237,225,0.9), transparent 24px) left/42px 100% no-repeat,
+    linear-gradient(270deg, rgba(242,237,225,0.9), transparent 24px) right/42px 100% no-repeat,
+    var(--white);
+}
+.seq-canvas {
+  --cols: 6;
+  min-width: calc(var(--cols) * 150px + 64px);
+  padding: 1.25rem;
+}
+.seq-lifelines,
+.seq-row {
+  display: grid;
+  grid-template-columns: 44px repeat(var(--cols), minmax(132px, 1fr));
+  gap: 0.55rem;
+  align-items: stretch;
+}
+.seq-lifelines {
+  margin-bottom: 0.9rem;
+  position: relative;
+}
+.seq-lane {
+  position: relative;
+  min-height: 92px;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--accent, var(--orange)) 22%, white);
+  background: color-mix(in srgb, var(--accent, var(--orange)) 9%, white);
+  padding: 0.85rem 0.7rem;
+}
+.seq-lane::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  left: 50%;
+  bottom: -520px;
+  border-left: 1px dashed color-mix(in srgb, var(--accent, var(--orange)) 36%, var(--gray-200));
+}
+.seq-lane strong {
+  display: block;
+  color: var(--navy);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+.seq-lane span {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--gray-500);
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.seq-row {
+  position: relative;
+  min-height: 58px;
+  align-items: center;
+}
+.seq-index {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+.seq-arrow {
+  grid-column: calc(var(--start) + 1) / calc(var(--end) + 2);
+  min-height: 28px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.seq-arrow::before {
+  content: '';
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent, var(--orange)), color-mix(in srgb, var(--accent, var(--orange)) 24%, var(--gray-300)));
+}
+.seq-arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid var(--accent, var(--orange));
+}
+.seq-arrow.reverse::after {
+  right: auto;
+  left: -1px;
+  border-left: 0;
+  border-right: 8px solid var(--accent, var(--orange));
+}
+.seq-arrow.async::before {
+  background: repeating-linear-gradient(90deg, var(--accent, var(--orange)) 0 10px, transparent 10px 16px);
+}
+.seq-arrow span {
+  position: absolute;
+  left: 50%;
+  top: -0.1rem;
+  transform: translate(-50%, -50%);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  padding: 0.22rem 0.5rem;
+  color: var(--gray-700);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(15,14,12,0.05);
+}
+.seq-note {
+  grid-column: calc(var(--col) + 1);
+  color: var(--gray-500);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  background: rgba(242,237,225,0.88);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+.seq-gates {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-100);
+}
+.seq-gate {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+}
+.seq-gate strong {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 0.35rem;
+}
+.seq-gate p {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  line-height: 1.45;
+}
+@media (max-width: 900px) {
+  .seq-intro { display: block; }
+  .seq-legend { justify-content: flex-start; margin-top: 1rem; }
+  .seq-gates { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .seq-gates { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   ENHANCED PRODUCT SCREENS
+   ═══════════════════════════════════════════ */
+.ui-mockup {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ui-titlebar {
+  min-height: 48px;
+  justify-content: space-between;
+}
+.ui-window-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ui-url {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  margin-left: 0.5rem;
+}
+.ui-env {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--emerald);
+  background: var(--emerald-dim);
+  padding: 0.26rem 0.5rem;
+  border-radius: 999px;
+}
+.ui-body { padding: 1.25rem; }
+.ui-shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 280px;
+  gap: 1rem;
+  align-items: start;
+}
+.ui-sidebar,
+.ui-inspector,
+.ui-result-list,
+.admin-card,
+.analytics-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+.ui-sidebar,
+.ui-inspector { padding: 1rem; }
+.ui-search-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.25rem;
+}
+.ui-search-bar {
+  flex: 1;
+  margin-bottom: 0;
+}
+.ui-search-bar input { min-width: 0; }
+.ui-segmented {
+  display: inline-flex;
+  padding: 0.22rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  background: var(--gray-100);
+}
+.ui-segmented span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  padding: 0.36rem 0.7rem;
+  border-radius: 999px;
+}
+.ui-segmented .active {
+  color: var(--white);
+  background: var(--navy);
+}
+.facet-group {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--gray-100);
+}
+.facet-group:first-of-type { border-top: 0; padding-top: 0; }
+.facet-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--navy);
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin-bottom: 0.55rem;
+}
+.facet-title span {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  color: var(--gray-400);
+  font-weight: 600;
+}
+.facet-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: var(--gray-600);
+  font-size: 0.78rem;
+  padding: 0.32rem 0;
+}
+.facet-option::before {
+  content: '';
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-300);
+  background: var(--white);
+  flex: 0 0 auto;
+}
+.facet-option.selected::before {
+  background: var(--orange);
+  border-color: var(--orange);
+  box-shadow: inset 0 0 0 3px var(--white);
+}
+.facet-option small {
+  margin-left: auto;
+  color: var(--gray-400);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+}
+.ui-result-list {
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+}
+.result-card {
+  display: grid;
+  grid-template-columns: 104px 1fr auto;
+  gap: 0.9rem;
+  padding: 0.85rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-100);
+}
+.result-card.featured {
+  background: linear-gradient(180deg, #F2EDE1, rgba(242,237,225,0.55));
+  border-color: rgba(122,46,30,0.28);
+}
+.result-visual {
+  min-height: 96px;
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(circle at 70% 22%, rgba(242,237,225,0.8), transparent 24%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent, var(--orange)) 36%, white), color-mix(in srgb, var(--accent, var(--orange)) 9%, white));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--accent, var(--orange)) 72%, black);
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+.result-main h4 {
+  margin: 0 0 0.25rem;
+  color: var(--navy);
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 800;
+}
+.result-main p {
+  color: var(--gray-500);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin-bottom: 0.55rem;
+}
+.result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.result-tags span,
+.trace-row span,
+.policy-chip {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: 0.22rem 0.45rem;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  color: var(--gray-600);
+}
+.result-score {
+  min-width: 92px;
+  text-align: right;
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+}
+.result-score strong {
+  font-family: var(--serif);
+  font-size: 1.65rem;
+  color: var(--orange);
+  line-height: 1;
+}
+.result-score span {
+  color: var(--gray-500);
+  font-size: 0.68rem;
+}
+.ui-inspector h4,
+.ui-sidebar h4 {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin-bottom: 0.9rem;
+}
+.trace-row {
+  padding: 0.72rem 0;
+  border-top: 1px solid var(--gray-100);
+}
+.trace-row:first-of-type { border-top: 0; padding-top: 0; }
+.trace-row strong {
+  display: block;
+  color: var(--navy);
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+.trace-meter {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--gray-100);
+  overflow: hidden;
+  margin: 0.4rem 0;
+}
+.trace-meter i {
+  display: block;
+  height: 100%;
+  width: var(--w);
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--orange), var(--teal));
+}
+.ui-console-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.admin-card,
+.analytics-card {
+  padding: 1rem;
+}
+.console-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.console-head h4 {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--navy);
+}
+.skill-table,
+.experiment-list {
+  display: grid;
+  gap: 0.55rem;
+}
+.skill-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.72rem;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+}
+.skill-row strong {
+  color: var(--navy);
+  font-size: 0.84rem;
+}
+.skill-row small {
+  color: var(--gray-500);
+  font-size: 0.72rem;
+}
+.toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--gray-300);
+  position: relative;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 4px rgba(15,14,12,0.18);
+}
+.toggle.on { background: var(--emerald); }
+.toggle.on::after { left: 21px; }
+.policy-grid,
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.policy-box,
+.metric-box {
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+}
+.policy-box strong,
+.metric-box strong {
+  display: block;
+  color: var(--navy);
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+.policy-box span,
+.metric-box span {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--gray-500);
+  font-size: 0.7rem;
+}
+.chart-card {
+  margin-top: 0.85rem;
+  padding: 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+}
+.bar-chart {
+  height: 138px;
+  display: flex;
+  align-items: end;
+  gap: 0.45rem;
+  padding-top: 0.5rem;
+}
+.bar-chart i {
+  flex: 1;
+  min-width: 18px;
+  height: var(--h);
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--teal), var(--indigo));
+}
+.experiment-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-200);
+}
+.experiment-row strong {
+  color: var(--navy);
+  font-size: 0.82rem;
+}
+.experiment-row p {
+  color: var(--gray-500);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+@media (max-width: 1060px) {
+  .ui-shell { grid-template-columns: 1fr; }
+  .ui-search-header { display: grid; }
+  .ui-console-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .result-card { grid-template-columns: 1fr; }
+  .result-score { text-align: left; }
+  .policy-grid,
+  .metric-grid { grid-template-columns: 1fr; }
+  .skill-row { grid-template-columns: 1fr auto; }
+  .skill-row small { grid-column: 1 / -1; }
+  .ui-segmented { overflow-x: auto; max-width: 100%; }
+}
+
+/* ═══════════════════════════════════════════
+   ROADMAP & GOVERNANCE
+   ═══════════════════════════════════════════ */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 3rem;
+}
+.roadmap-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 8px 28px rgba(15,14,12,0.04);
+  position: relative;
+  overflow: hidden;
+}
+.roadmap-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--accent, var(--orange));
+}
+.roadmap-card .phase {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--accent, var(--orange));
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.roadmap-card h3 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 0;
+}
+.roadmap-card p {
+  color: var(--gray-500);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+.roadmap-card ul {
+  list-style: none;
+  display: grid;
+  gap: 0.42rem;
+  margin-top: auto;
+}
+.roadmap-card li {
+  color: var(--gray-600);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding-left: 1rem;
+  position: relative;
+}
+.roadmap-card li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 50%;
+  background: var(--accent, var(--orange));
+}
+.governance-band {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.governance-item {
+  background: var(--navy-deep);
+  color: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  border: 1px solid rgba(242,237,225,0.08);
+}
+.governance-item strong {
+  display: block;
+  color: var(--orange);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+.governance-item p {
+  color: rgba(107,101,88,0.78);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+@media (max-width: 980px) {
+  .roadmap-grid { grid-template-columns: repeat(2, 1fr); }
+  .governance-band { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .roadmap-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   COMPONENT GRID
+   ═══════════════════════════════════════════ */
+.comp-section { margin-top: 3rem; }
+.comp-section-title {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+.comp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+.comp-card {
+  background: var(--white);
+  border-radius: 10px;
+  border: 1px solid var(--gray-200);
+  padding: 1.5rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15,14,12,0.05);
+}
+.comp-card::after {
+  content: attr(data-role);
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--accent, var(--orange));
+  background: color-mix(in srgb, var(--accent, var(--orange)) 12%, white);
+}
+.comp-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+  padding-right: 4rem;
+}
+.comp-card p {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  line-height: 1.6;
+}
+@media (max-width: 768px) {
+  .comp-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════
+   DARK SECTION (for dividers)
+   ═══════════════════════════════════════════ */
+.dark-section {
+  background:
+    radial-gradient(circle at 82% 10%, rgba(122,46,30,0.18), transparent 30%),
+    linear-gradient(180deg, var(--navy-deep), #132139 58%, var(--navy-deep));
+  color: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+.dark-section::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 50%;
+  height: 100%;
+  background: radial-gradient(ellipse at 80% 50%, var(--orange-glow) 0%, transparent 60%);
+  opacity: 0.3;
+  pointer-events: none;
+}
+.dark-section h2 { color: var(--white); }
+.dark-section .lead { color: var(--gray-400); }
+
+/* ═══════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════ */
+footer {
+  background: var(--navy-deep);
+  padding: 3rem 0;
+  text-align: center;
+  border-top: 3px solid var(--orange);
+}
+footer .brand-text {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--gray-400);
+  text-transform: uppercase;
+}
+footer .brand-text strong { color: var(--orange); }
+footer .footer-sub {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  margin-top: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════
+   SWIMLANE TABLE
+   ═══════════════════════════════════════════ */
+.swimlane {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  margin-top: 2rem;
+}
+.swimlane-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.swimlane-body {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.swimlane-cell {
+  padding: 1.25rem;
+  border-right: 1px solid var(--gray-100);
+  border-top: 1px solid var(--gray-100);
+  transition: background 0.2s;
+}
+.swimlane-cell:last-child { border-right: none; }
+.swimlane-cell:hover { background: var(--gray-100); }
+.swimlane-cell h5 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.35rem;
+}
+.swimlane-cell p {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+}
+@media (max-width: 768px) {
+  .swimlane-body { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═══════════════════════════════════════════
+   FEEDBACK LOOP BANNER
+   ═══════════════════════════════════════════ */
+.feedback-loop {
+  background: var(--orange-dim);
+  border: 1px solid rgba(122,46,30,0.18);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  color: var(--orange);
+  font-weight: 500;
+}
+.feedback-loop .icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--orange);
+  color: var(--white);
+}
+
+
+/* ═══════════════════════════════════════════
+   SYSCO THEME ALIGNMENT
+   Shared editorial system: cream paper, Fraunces display,
+   IBM Plex Sans body, JetBrains Mono labels, gold/pepper/cyan accents.
+   ═══════════════════════════════════════════ */
+:root {
+  --paper: #F2EDE1;
+  --paper-warm: #EDE5D3;
+  --paper-deep: #E5DCC5;
+  --ink: #0F0E0C;
+  --ink-soft: #2A2621;
+  --ink-mute: #6B6558;
+  --rule: #1A1814;
+  --gold: #B8860B;
+  --gold-bright: #D4A017;
+  --gold-dim: #8B6914;
+  --accent-gd: #FFB800;
+  --pepper: #7A2E1E;
+  --moss: #3D4A2E;
+  --cyan-ed: #265D6B;
+  --ingestion: #265D6B;
+  --inference: #7A2E1E;
+  --shadow: rgba(15,14,12,0.08);
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --orange: var(--pepper);
+  --orange-light: var(--gold-bright);
+  --orange-dim: rgba(122,46,30,0.12);
+  --orange-glow: rgba(122,46,30,0.22);
+  --amber: var(--gold);
+  --rose: var(--pepper);
+  --cyan: var(--cyan-ed);
+  --teal: var(--cyan-ed);
+  --teal-dark: #1E4E59;
+  --teal-dim: rgba(38,93,107,0.12);
+  --teal-glow: rgba(38,93,107,0.22);
+  --indigo: var(--moss);
+  --indigo-dim: rgba(61,74,46,0.12);
+  --emerald: var(--moss);
+  --emerald-dim: rgba(61,74,46,0.12);
+  --navy: var(--ink);
+  --navy-deep: #1B1A18;
+  --navy-mid: #2A2824;
+  --navy-light: #3A352C;
+  --slate: var(--ink-mute);
+  --silver: #B8AE97;
+  --silver-light: var(--paper-deep);
+  --cream: var(--paper);
+  --white: var(--paper);
+  --off-white: var(--paper);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: var(--ink-mute);
+  --gray-100: var(--paper-warm);
+  --gray-200: var(--paper-deep);
+  --gray-300: #D8CFBA;
+  --gray-400: #B8AE97;
+  --gray-500: var(--ink-mute);
+  --gray-600: var(--ink-soft);
+  --gray-700: var(--ink);
+  --gray-800: #1B1A18;
+
+  --gd-orange: var(--pepper);
+  --gd-orange-light: var(--gold-bright);
+  --gd-orange-dark: #5E2116;
+  --gd-orange-deep: #5E2116;
+  --gd-orange-glow: rgba(122,46,30,0.16);
+  --gd-navy: var(--ink);
+  --gd-deep: #1B1A18;
+  --gd-blue: var(--cyan-ed);
+  --gd-accent: var(--pepper);
+  --gd-accent-light: var(--gold-bright);
+  --gd-teal: var(--cyan-ed);
+  --gd-teal-light: #4A7A9E;
+  --gd-teal-dark: #1E4E59;
+  --gd-teal-dim: #1E4E59;
+  --gd-cyan: var(--cyan-ed);
+  --gd-green: var(--moss);
+  --gd-success: var(--moss);
+  --gd-red: var(--pepper);
+  --gd-danger: var(--pepper);
+  --gd-yellow: var(--gold);
+  --gd-warning: var(--gold-bright);
+  --gd-purple: var(--moss);
+  --gd-dark: #1B1A18;
+  --gd-darker: var(--ink);
+  --gd-dark-alt: #2A2824;
+  --gd-charcoal: #2A2824;
+  --gd-slate: var(--ink-mute);
+  --gd-light: var(--paper);
+  --gd-cream: var(--paper);
+  --gd-white: var(--paper);
+  --gd-offwhite: var(--paper);
+  --gd-gray: var(--ink-mute);
+  --gd-gray-light: #B8AE97;
+  --gd-gray-100: var(--paper-warm);
+  --gd-gray-200: var(--paper-deep);
+  --gd-gray-400: #B8AE97;
+  --gd-gray-600: var(--ink-mute);
+  --gd-gray-800: var(--ink-soft);
+  --gd-card: var(--paper-warm);
+  --gd-card-border: rgba(26,24,20,0.16);
+  --gd-surface: #1B1A18;
+  --gd-surface-2: #2A2824;
+  --gd-bg: var(--paper);
+  --gd-bg-card: var(--paper-warm);
+  --gd-bg-elevated: var(--paper-warm);
+  --gd-text: var(--ink);
+  --gd-text-muted: var(--ink-mute);
+  --gd-border: var(--rule);
+  --gd-gradient: linear-gradient(135deg, var(--pepper) 0%, var(--gold) 100%);
+  --gd-gradient-dark: linear-gradient(135deg, #1B1A18 0%, #2A2824 100%);
+  --gd-gradient-orange: linear-gradient(135deg, var(--pepper) 0%, var(--gold) 100%);
+  --gd-gradient-teal: linear-gradient(135deg, var(--cyan-ed) 0%, var(--gold) 100%);
+  --radius: 4px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --section-gap: 7rem;
+}
+
+html, body {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  font-family: 'IBM Plex Sans', sans-serif !important;
+  font-weight: 400;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "ss02", "liga", "kern";
+}
+
+body::before {
+  content: "" !important;
+  position: fixed !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  opacity: 0.32 !important;
+  z-index: 9999 !important;
+  mix-blend-mode: multiply !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.08 0 0 0 0 0.05 0 0 0 0.3 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") !important;
+}
+body::after { content: none !important; }
+
+h1, h2, h3, h4,
+.cover-title, .hero h1, .cover h1, .section-title, .masthead-title,
+.stat-number, .stat-num, .metric-value, .footer-logo, .nav-logo {
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-variation-settings: "opsz" 72, "SOFT" 30, "WONK" 1;
+  letter-spacing: -0.015em;
+  color: var(--ink) !important;
+}
+
+p, li, td, th, .lead, .prose, .cover-subtitle, .cover-sub, .hero-subtitle,
+.section-description, .section-intro, .card-description, .scenario-description {
+  font-family: 'IBM Plex Sans', sans-serif !important;
+}
+
+code, pre, .mono, [class*="mono"], .section-label, .section-kicker, .kicker,
+.cover-badge, .hero-badge, .cover-eyebrow, .nav-issue, .cover-meta-label,
+.cover-meta-value, .label, .badge, .tag, .pill, .code-header, .code-content,
+.diagram-label, .component-category, .ui-titlebar-text {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.cover, .hero {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border-bottom: 3px double var(--rule) !important;
+}
+.cover::before, .hero::before {
+  background: none !important;
+  opacity: 0 !important;
+  animation: none !important;
+}
+.cover::after, .hero::after {
+  background: var(--rule) !important;
+  opacity: 1 !important;
+  height: 1px !important;
+  animation: none !important;
+}
+.cover-grid, .hero-grid {
+  background-image:
+    linear-gradient(rgba(26,24,20,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,24,20,0.06) 1px, transparent 1px) !important;
+  opacity: 0.55 !important;
+  animation: none !important;
+}
+.cover-title span, .cover h1 em, .hero h1 em, .gradient-text,
+.nav-logo, .section-title em, .masthead-title .and {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: var(--gold-dim) !important;
+}
+.cover-subtitle, .cover-sub, .hero-subtitle, .cover-meta, .cover-meta-value,
+.cover-issue, .cover-badge .logo-text { color: var(--ink-mute) !important; }
+.cover-badge, .hero-badge, .cover-eyebrow, .kicker, .section-label, .section-kicker,
+.cover-tags span, .tag, .pill, .badge {
+  color: var(--pepper) !important;
+  border-color: var(--pepper) !important;
+  background: rgba(122,46,30,0.06) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+nav, .mag-nav, header, .site-header, .topbar, .masthead {
+  background: rgba(242,237,225,0.96) !important;
+  color: var(--ink) !important;
+  border-color: var(--rule) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+nav a, .mag-nav a, .nav-links a { color: var(--ink-mute) !important; }
+nav a:hover, nav a.active, .mag-nav a:hover, .mag-nav a.active,
+.nav-links a:hover, .nav-links a.active { color: var(--pepper) !important; background: rgba(122,46,30,0.08) !important; }
+
+section, .mag-section, .toc, .content-section, .article-section {
+  background-color: var(--paper) !important;
+  color: var(--ink) !important;
+}
+.section-header {
+  border-color: var(--rule) !important;
+}
+.section-num, .section-number, .section-index { color: var(--gold-dim) !important; }
+.section-label::before, .section-kicker::before { background: var(--gold) !important; box-shadow: none !important; }
+
+.card, [class$="-card"], [class*="-card "], .panel, [class$="-panel"],
+.tile, [class$="-tile"], .box, [class$="-box"], .scenario-block,
+.use-case-card, .component-card, .integration-card, .stat-card, .metric-card,
+.arch-panel, .diagram-frame, .workflow-card, .feature-card, .step-card,
+.toc-card, .screen-card, .insight-card, .table-card {
+  background: var(--paper-warm) !important;
+  color: var(--ink-soft) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+.card *, [class$="-card"] *, .panel *, [class$="-panel"] *, .tile *, [class$="-tile"] * {
+  border-color: rgba(26,24,20,0.18);
+}
+
+button, .button, .btn, [class*="button"], [class*="btn"] {
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.diagram-container, .architecture-diagram, .flow-diagram, .system-diagram,
+.data-flow-diagram, .sequence-diagram, .diagram-card {
+  background: var(--paper-warm) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.code-block, .code-window, .code-panel, pre, .terminal, .terminal-window,
+.mock, .mock-screen, .app-window, .browser-frame, .dashboard-frame,
+.ui-window, .ui-screen, .demo-screen {
+  background: #1B1A18 !important;
+  color: #D4D0C8 !important;
+  border-color: #2A2824 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+.code-block *, .code-window *, .code-panel *, pre *, .terminal *, .terminal-window *,
+.mock *, .mock-screen *, .app-window *, .browser-frame *, .dashboard-frame *,
+.ui-window *, .ui-screen *, .demo-screen * {
+  border-color: rgba(242,237,225,0.12);
+}
+
+table { border-color: var(--rule) !important; }
+th { color: var(--ink-mute) !important; }
+td { color: var(--ink-soft) !important; border-color: var(--paper-deep) !important; }
+hr { border-color: var(--rule) !important; background: var(--rule) !important; }
+a { color: var(--pepper) !important; }
+::selection { background: rgba(184,134,11,0.22) !important; color: var(--ink) !important; }
+
+
+
+/* Static editorial pacing to match the Sysco magazine treatment. */
+.reveal, .reveal.visible, .fade-up, .fade-up.visible,
+[class*="reveal"], [class*="fade"], .hero h1, .hero-sub, .hero-subtitle,
+.hero-tags, .hero-issue, .cover-content, .cover-title, .cover-subtitle,
+.cover-meta, .cover-tags, .section-header, .card, [class$="-card"] {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+.hero-bg, .cover-bg, .orb, [class*="orb"], [class*="glow"] {
+  background: none !important;
+  opacity: 0 !important;
+  animation: none !important;
+}
+.accent, .hero h1 .accent, h1 .accent, h2 .accent, h3 .accent {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: var(--gold-dim) !important;
+}
+
+@media (min-width: 900px) {
+  nav, .mag-nav {
+    display: flex !important;
+    align-items: center !important;
+    gap: 24px !important;
+    min-height: auto !important;
+    padding: 14px 3.25vw !important;
+    overflow: visible !important;
+  }
+  .nav-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+  .nav-title, .masthead-left, .masthead-right {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    color: var(--ink-mute) !important;
+  }
+  .nav-links {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px 18px !important;
+    min-width: 0 !important;
+    list-style: none !important;
+  }
+  .nav-links a {
+    white-space: normal !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.14em !important;
+    padding: 3px 0 !important;
+  }
+}
+@media (max-width: 899px) {
+  .nav-links { display: none !important; }
+  nav, .mag-nav { padding: 12px 18px !important; }
+}
+
+svg text { font-family: 'IBM Plex Sans', sans-serif !important; }
+svg text[font-family*="Mono"], svg text[font-family*="JetBrains"] { font-family: 'JetBrains Mono', monospace !important; }
+svg text[font-family*="Fraunces"], svg text.svg-serif, svg .svg-serif { font-family: 'Fraunces', Georgia, serif !important; }
+svg .svg-mono { font-family: 'JetBrains Mono', monospace !important; }
+
+
+
+/* Sysco cover scale: fixed editorial cover instead of viewport-height landing page. */
+body > section.hero,
+body > section.cover,
+body > section.hero-cover,
+main > section.hero,
+main > section.cover,
+main > section.hero-cover {
+  min-height: 580px !important;
+  height: auto !important;
+  max-width: 1320px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-bottom: 100px !important;
+  padding-top: 80px !important;
+  padding-bottom: 60px !important;
+}
+
+/* SYSCO READABILITY ALIGNMENT
+   Uses the same editorial primitives as Sysco_CaaS_Architecture_Deep_Dive_Magazine.html. */
+.credibility-section.sysco-evidence {
+  max-width: 1320px;
+  margin: 0 auto 90px;
+  padding: 0 60px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.credibility-section.sysco-evidence .editors-note {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 50px;
+  padding: 40px 0 50px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 50px;
+}
+.credibility-section.sysco-evidence .editors-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--gold-dim);
+  font-variation-settings: "opsz" 36, "SOFT" 50;
+}
+.credibility-section.sysco-evidence .editors-label::after {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: var(--gold);
+  margin-top: 12px;
+}
+.credibility-section.sysco-evidence .editors-body {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 18, "SOFT" 30;
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 780px;
+}
+.credibility-section.sysco-evidence .editors-body .drop {
+  float: left;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 144, "WONK" 1;
+  font-weight: 500;
+  font-size: 82px;
+  line-height: 0.8;
+  padding: 8px 12px 0 0;
+  color: var(--pepper);
+  font-style: italic;
+}
+.credibility-section.sysco-evidence .arch-panel {
+  background: var(--paper-warm);
+  border: 1px solid var(--rule);
+  padding: 36px 40px;
+  margin-bottom: 50px;
+  position: relative;
+}
+.credibility-section.sysco-evidence .arch-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--gold);
+}
+.credibility-section.sysco-evidence .arch-panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  color: var(--gold);
+}
+.credibility-section.sysco-evidence .arch-panel-title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: "opsz" 36, "SOFT" 20;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+.credibility-section.sysco-evidence .arch-panel-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 820px;
+  margin-bottom: 20px;
+}
+.credibility-section.sysco-evidence .detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0 0;
+  font-size: 13px;
+}
+.credibility-section.sysco-evidence .detail-table thead th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--rule);
+}
+.credibility-section.sysco-evidence .detail-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--paper-deep);
+  vertical-align: top;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.credibility-section.sysco-evidence .detail-table tbody tr:last-child td { border-bottom: none; }
+.credibility-section.sysco-evidence .detail-table .label-cell {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--ink);
+}
+#use-cases {
+  max-width: 1320px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 60px !important;
+  padding-right: 60px !important;
+  border-top: 3px solid var(--rule) !important;
+  padding-top: 20px !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+#use-cases .section-header {
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  gap: 30px !important;
+  align-items: end !important;
+  margin-bottom: 60px !important;
+}
+#use-cases > .section-number,
+#use-cases .section-header > .section-number,
+#use-cases .section-header > .section-num {
+  grid-column: 1 !important;
+  grid-row: 1 / span 3 !important;
+  font-family: 'Fraunces', serif !important;
+  font-style: italic !important;
+  font-variation-settings: "opsz" 144, "WONK" 1, "SOFT" 40 !important;
+  font-weight: 300 !important;
+  font-size: 72px !important;
+  line-height: 0.85 !important;
+  color: var(--gold-dim) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+#use-cases .section-header > h2,
+#use-cases .section-header > .section-title,
+#use-cases > .section-header h2,
+#use-cases > .section-title {
+  grid-column: 2 !important;
+  font-family: 'Fraunces', serif !important;
+  font-variation-settings: "opsz" 72, "WONK" 1, "SOFT" 20 !important;
+  font-weight: 500 !important;
+  font-size: 38px !important;
+  line-height: 1 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--ink) !important;
+}
+#use-cases .section-header > p,
+#use-cases .section-lead,
+#use-cases .section-subtitle {
+  grid-column: 2 !important;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+  color: var(--ink-soft) !important;
+  max-width: 820px !important;
+  margin-bottom: 0 !important;
+}
+#use-cases .card-grid,
+#use-cases .card-grid-2,
+#use-cases .card-grid-3,
+#use-cases .use-cases-grid,
+#use-cases .usecase-grid,
+#use-cases .usecase-cards,
+#use-cases .grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
+  gap: 24px !important;
+  margin: 30px 0 50px !important;
+}
+#use-cases .card,
+#use-cases .use-case-card,
+#use-cases .usecase-card,
+#use-cases .toc-card {
+  background: var(--paper) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: 0 !important;
+  padding: 28px 28px 24px !important;
+  position: relative !important;
+  box-shadow: none !important;
+  transform: none !important;
+  color: var(--ink) !important;
+}
+#use-cases .card::before,
+#use-cases .use-case-card::before,
+#use-cases .usecase-card::before,
+#use-cases .toc-card::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  background: var(--gold) !important;
+  transform: none !important;
+}
+#use-cases .card-icon,
+#use-cases .use-case-icon,
+#use-cases .card .icon,
+#use-cases .usecase-icon { display: none !important; }
+#use-cases .card h3,
+#use-cases .use-case-card h3,
+#use-cases .usecase-card h3,
+#use-cases .toc-card-title {
+  font-family: 'Fraunces', serif !important;
+  font-variation-settings: "opsz" 36 !important;
+  font-weight: 500 !important;
+  font-size: 20px !important;
+  line-height: 1.15 !important;
+  margin: 0 0 8px !important;
+  color: var(--ink) !important;
+}
+#use-cases .card p,
+#use-cases .use-case-card p,
+#use-cases .usecase-card p,
+#use-cases .toc-card-desc {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  color: var(--ink-soft) !important;
+  margin: 0 0 14px !important;
+}
+#use-cases .tech-pills,
+#use-cases .card-meta,
+#use-cases .tags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin-top: 14px !important;
+}
+#use-cases .pill,
+#use-cases .card-chip,
+#use-cases .use-case-tag,
+#use-cases .tags span,
+#use-cases .tag {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important;
+  padding: 3px 8px !important;
+  background: var(--paper-warm) !important;
+  border: 1px solid var(--paper-deep) !important;
+  color: var(--ink-mute) !important;
+  letter-spacing: 0.05em !important;
+  text-transform: none !important;
+  border-radius: 0 !important;
+}
+#use-cases .stat-row {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 20px !important;
+  margin: 30px 0 50px !important;
+}
+#use-cases .stat-item,
+#use-cases .stat-card,
+#use-cases .stat-box {
+  padding: 24px 20px !important;
+  border: 1px solid var(--rule) !important;
+  text-align: center !important;
+  background: var(--paper) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+#use-cases .stat-value,
+#use-cases .stat-num {
+  font-family: 'Fraunces', serif !important;
+  font-variation-settings: "opsz" 144, "WONK" 1 !important;
+  font-weight: 400 !important;
+  font-size: 42px !important;
+  line-height: 1 !important;
+  color: var(--gold) !important;
+  margin-bottom: 6px !important;
+}
+#use-cases .stat-label,
+#use-cases .stat-unit {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: var(--ink-mute) !important;
+}
+
+#use-cases > .container > div:first-child h2,
+#use-cases > .container > .reveal:first-child h2,
+#use-cases > .container > h2 {
+  font-family: 'Fraunces', serif !important;
+  font-variation-settings: "opsz" 72, "WONK" 1, "SOFT" 20 !important;
+  font-weight: 500 !important;
+  font-size: 38px !important;
+  line-height: 1 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--ink) !important;
+  margin-bottom: 18px !important;
+}
+#use-cases .section-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.25em !important;
+  text-transform: uppercase !important;
+  color: var(--ink-mute) !important;
+  margin-bottom: 8px !important;
+}
+#use-cases .lead {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+  color: var(--ink-soft) !important;
+  max-width: 820px !important;
+}
+#use-cases .card h4,
+#use-cases .use-case-card h4,
+#use-cases .usecase-card h4 {
+  font-family: 'Fraunces', serif !important;
+  font-variation-settings: "opsz" 36 !important;
+  font-weight: 500 !important;
+  font-size: 20px !important;
+  line-height: 1.15 !important;
+  margin: 0 0 8px !important;
+  color: var(--ink) !important;
+}
+
+@media (max-width: 900px) {
+  .credibility-section.sysco-evidence,
+  #use-cases { padding-left: 24px !important; padding-right: 24px !important; }
+  .credibility-section.sysco-evidence .editors-note,
+  #use-cases .section-header { grid-template-columns: 1fr !important; gap: 20px !important; }
+  #use-cases > .section-number,
+  #use-cases .section-header > .section-number,
+  #use-cases .section-header > .section-num,
+  #use-cases .section-header > h2,
+  #use-cases .section-header > .section-title,
+  #use-cases .section-header > p,
+  #use-cases .section-lead,
+  #use-cases .section-subtitle { grid-column: 1 !important; grid-row: auto !important; }
+  #use-cases .card-grid,
+  #use-cases .card-grid-2,
+  #use-cases .card-grid-3,
+  #use-cases .use-cases-grid,
+  #use-cases .usecase-grid,
+  #use-cases .usecase-cards,
+  #use-cases .grid,
+  #use-cases .stat-row { grid-template-columns: 1fr !important; }
+}
+
+/* Final accessibility and responsive polish pass. */
+body::before {
+  opacity: 0.18 !important;
+}
+.governance-item p {
+  color: rgba(242,237,225,0.78);
+}
+.detail-table {
+  width: 100%;
+}
+@media (max-width: 899px) {
+  html {
+    scroll-padding-top: 118px;
+  }
+  nav,
+  .mag-nav {
+    padding: 10px 16px 8px !important;
+  }
+  nav .nav-inner {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  nav .brand {
+    white-space: normal !important;
+    line-height: 1.35 !important;
+    font-size: 0.62rem !important;
+    letter-spacing: 0.08em !important;
+  }
+  nav .nav-links {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0.45rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0.15rem 0 0.25rem !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  nav .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+  nav .nav-links a {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 36px !important;
+    white-space: nowrap !important;
+    padding: 0.4rem 0.6rem !important;
+    border: 1px solid rgba(26,24,20,0.16) !important;
+    border-radius: 4px !important;
+    background: rgba(248,243,232,0.72) !important;
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.08em !important;
+  }
+  main > section.hero {
+    padding-top: 118px !important;
+  }
+  .hero-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .hero-action {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+@media (max-width: 700px) {
+  .hero-proofline {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.45rem 0.9rem !important;
+  }
+  .credibility-section.sysco-evidence .editors-body .drop {
+    float: none;
+    display: inline-block;
+    padding: 0 0.3rem 0 0;
+    font-size: 56px;
+    line-height: 0.9;
+    vertical-align: baseline;
+  }
+  .credibility-section.sysco-evidence .detail-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ui-search-header {
+    gap: 0.75rem;
+  }
+  .ui-search-bar {
+    flex-direction: column;
+  }
+  .ui-search-bar input,
+  .ui-search-bar button {
+    width: 100%;
+    border-radius: 4px !important;
+  }
+}
+
+</style>
+</head>
+<body>
+<a class="skip-link" href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#main">Skip to content</a>
+
+<!-- ═══════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════ -->
+<nav aria-label="Page sections" style="transform: translateY(0px); background: rgba(15, 14, 12, 0.92);">
+  <div class="nav-inner">
+    <div class="brand"><strong>Grid Dynamics</strong> &nbsp;/ Magellan AI Search Ops Harness</div>
+    <div class="nav-links">
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#operating-model" class="active" aria-current="true">Model</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#use-cases" class="">Use Cases</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#scenarios" class="">Scenarios</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#data-flow" class="">Data Flow</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#context" class="">Context Engineering</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#user-flow" class="">User Flow</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#sequence" class="">Sequence</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#ui-screens" class="">Ops Console</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#roadmap">Roadmap</a>
+      <a href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#components">Components</a>
+    </div>
+  </div>
+  <div class="scroll-progress" aria-hidden="true" style="width: 0%;"></div>
+</nav>
+<main id="main">
+
+<!-- ═══════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════ -->
+<section class="hero" aria-labelledby="page-title">
+  <div class="hero-visual" aria-hidden="true">
+    <div class="ops-stage ops-link">
+      <div class="ops-card ops-search">
+        <h4>AI Search Ops Signal</h4>
+        <div class="ops-query"><span class="lens">Q</span><span>zero-result cluster: waterproof trail shoes</span></div>
+      </div>
+      <div class="ops-node">
+        <strong>OPS</strong>
+        <span>Harness</span>
+      </div>
+      <div class="ops-card ops-pipeline">
+        <h4>Runbook Pipeline</h4>
+        <div class="ops-pipeline-row">
+          <span class="ops-label">Catalog</span>
+          <div class="ops-bar"><span style="--w: 92%;"></span></div>
+          <span class="ops-score">gap</span>
+        </div>
+        <div class="ops-pipeline-row">
+          <span class="ops-label">Index</span>
+          <div class="ops-bar"><span style="--w: 88%;"></span></div>
+          <span class="ops-score">stale</span>
+        </div>
+        <div class="ops-pipeline-row">
+          <span class="ops-label">MXP</span>
+          <div class="ops-bar"><span style="--w: 76%;"></span></div>
+          <span class="ops-score">review</span>
+        </div>
+        <div class="ops-pipeline-row">
+          <span class="ops-label">Canary</span>
+          <div class="ops-bar"><span style="--w: 64%;"></span></div>
+          <span class="ops-score">pass</span>
+        </div>
+      </div>
+      <div class="ops-card ops-metric">
+        <strong>18</strong>
+        <span>Open ops tasks triaged into eval-ready runbooks</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-text">
+      <div class="eyebrow">Ops Automation · Grid Dynamics AI Search · Ecommerce Relevance</div>
+      <h1 id="page-title">AI Search<br><em>Ops Automation</em><br>Harness</h1>
+      <p class="subtitle"><strong>Magellan</strong> is a control plane around Grid Dynamics AI Search: it detects catalog, autocomplete, semantic index, personalization, and merchandising issues, then turns them into evaluated runbooks, approvals, canaries, and rollback-ready releases.</p>
+      <div class="hero-actions">
+        <a class="hero-action primary" href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#operating-model">Read Operating Model <span aria-hidden="true">→</span></a>
+        <a class="hero-action" href="file:///Users/vipkumar/Downloads/Magellan-Backend-Automator.html#ui-screens">View Ops Console <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="hero-tags">
+        <span class="hero-tag">Ops: Catalog QA</span>
+        <span class="hero-tag">Ops: Semantic Index Refresh</span>
+        <span class="hero-tag">Ops: Autocomplete Tuning</span>
+        <span class="hero-tag">Ops: MXP Rule Governance</span>
+        <span class="hero-tag">Ops: Canary &amp; Rollback</span>
+      </div>
+      <div class="hero-proofline" aria-label="Core operating guarantees">
+        <span>Runbooks-as-workflows</span>
+        <span>Human approval gates</span>
+        <span>Signed release evidence</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- CREDIBILITY DISCIPLINE -->
+<section class="credibility-section sysco-evidence" id="credibility-discipline">
+  <div class="editors-note">
+    <div class="editors-label">Validation status</div>
+    <div class="editors-body"><span class="drop">C</span><strong>Concept architecture.</strong> Prototype, demo, pilot, and production status are not claimed unless explicitly marked. Metrics are illustrative unless tagged <strong>Observed in pilot</strong>; UI screens are demo surfaces until tied to approved workflows.</div>
+  </div>
+  <div class="arch-panel shared">
+    <div class="arch-panel-label">Evidence Boundary</div>
+    <h2 class="arch-panel-title">Magellan AI Search Ops Harness</h2>
+    <p class="arch-panel-desc"><strong>Primary evaluator: Lead for Ecommerce Search Platforms.</strong> First workflow: automate operational tasks around Grid Dynamics AI Search without replacing the search solution itself. <strong>90-day proof:</strong> detect one retail query-cluster issue, generate the runbook, evaluate the change, canary it, and execute a rollback drill with signed evidence.</p>
+    <table class="detail-table">
+      <caption class="visually-hidden">Evidence boundaries and governance definitions for the Magellan AI Search Ops Harness concept.</caption>
+      <thead><tr><th scope="col">Boundary</th><th scope="col">Definition</th></tr></thead>
+      <tbody>
+        <tr><td class="label-cell">Source solution</td><td>Built as an ops layer around <a href="https://www.griddynamics.com/solutions/ai-search">Grid Dynamics AI Search and Selection</a>: semantic search, catalog optimization, multimodal engagement, smart autocomplete, personalization, JIT recommendations, AI-assisted selection, UGC feedback, and MXP merchandising controls.</td></tr>
+        <tr><td class="label-cell">Write-capable</td><td>Catalog enrichment tickets, synonym and autocomplete candidates, semantic index refresh jobs, MXP rule proposals, experiment configs, dashboard annotations, canary flags, rollback triggers.</td></tr>
+        <tr><td class="label-cell">Human approval</td><td>Production rule changes, broad traffic ramp, model or index swap, metric override, and high-impact merchandising changes.</td></tr>
+        <tr><td class="label-cell">Auto-close</td><td>Catalog completeness checks, query-cluster drift detection, zero-result triage, offline eval runs, shadow tests, and canary health checks.</td></tr>
+        <tr><td class="label-cell">Evidence</td><td>AI Search capability touched, dataset snapshot, query cluster, eval score, business metric, approver, canary cohort, and rollback reason.</td></tr>
+        <tr><td class="label-cell">Stack discipline</td><td>Magellan does not replace the search engine, MXP, recommender, or model provider. It wraps them with runbook automation, governance, observability, and reversible release control.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+
+<!-- STATS BAR -->
+<div class="container">
+  <div class="stats-bar reveal visible">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">7%+</div>
+        <div class="stat-label">Conversion Rate Uplift</div>
+        <span class="stat-note">GD AI Search proof point</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">12%</div>
+        <div class="stat-label">Click-Through Increase</div>
+        <span class="stat-note">GD AI Search proof point</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">~30%</div>
+        <div class="stat-label">Revenue-per-Visitor</div>
+        <span class="stat-note">GD AI Search proof point</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">15x</div>
+        <div class="stat-label">Return on Investment</div>
+        <span class="stat-note">GD AI Search proof point</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     0. OPERATING MODEL
+     ═══════════════════════════════════════════ -->
+<section id="operating-model" class="operating-model">
+  <div class="container">
+    <div class="model-grid">
+      <div class="model-summary reveal visible">
+        <div class="section-label">00 — Operating Model</div>
+        <h2>An ops layer for AI Search after go-live.</h2>
+        <p class="lead">Grid Dynamics AI Search provides the product discovery capabilities. Magellan automates the operational work around those capabilities: detect issues, diagnose root cause, propose a safe change, run evals, and release only through guarded workflows.</p>
+        <div class="model-points">
+          <div class="model-point">
+            <span class="icon-chip" style="--accent: var(--orange);">EV</span>
+            <div><strong>Every anomaly becomes an ops task</strong><p>Zero-result clusters, stale catalog attributes, weak autocomplete suggestions, and rule conflicts become structured work items, not ad hoc tickets.</p></div>
+          </div>
+          <div class="model-point">
+            <span class="icon-chip" style="--accent: var(--teal);">QA</span>
+            <div><strong>Runbooks generate candidate fixes</strong><p>The harness proposes catalog enrichment, synonym packs, index refreshes, personalization guardrails, and MXP rule changes with evidence attached.</p></div>
+          </div>
+          <div class="model-point">
+            <span class="icon-chip" style="--accent: var(--emerald);">AB</span>
+            <div><strong>Every release is measured and reversible</strong><p>Temporal workflows drive evals, shadow tests, canaries, approvals, rollback conditions, and versioned audit trails.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="model-board reveal reveal-delay-1 visible">
+        <div class="model-stage" data-step="01" style="--accent: var(--orange);">
+          <div class="stage-name">Capture Ops Signals</div>
+          <div class="stage-detail">
+            <h3>Watch the AI Search operating surface.</h3>
+            <p>Catalog deltas, query logs, zero-result sessions, voice/image search failures, reviews, UGC signals, inventory shifts, and MXP overrides enter one ops ledger.</p>
+            <ul><li>Catalog delta</li><li>Query logs</li><li>UGC</li><li>MXP edits</li></ul>
+          </div>
+        </div>
+        <div class="model-stage" data-step="02" style="--accent: var(--teal);">
+          <div class="stage-name">Diagnose Capability</div>
+          <div class="stage-detail">
+            <h3>Map symptoms to the responsible AI Search capability.</h3>
+            <p>The harness classifies whether the issue belongs to semantic retrieval, catalog optimization, multimodal search, smart autocomplete, personalization, JIT recommendations, product selection, UGC feedback, or merchandising rules.</p>
+            <ul><li>Semantic</li><li>Catalog</li><li>Autocomplete</li><li>MXP</li></ul>
+          </div>
+        </div>
+        <div class="model-stage" data-step="03" style="--accent: var(--indigo);">
+          <div class="stage-name">Propose Runbook</div>
+          <div class="stage-detail">
+            <h3>Generate a fix with tests, owner, and rollback plan.</h3>
+            <p>Candidate runbooks include catalog fixes, synonym updates, autocomplete terms, re-embedding jobs, rule changes, benchmark sets, and rollout criteria.</p>
+            <ul><li>Eval set</li><li>Owner</li><li>Canary</li><li>Rollback</li></ul>
+          </div>
+        </div>
+        <div class="model-stage" data-step="04" style="--accent: var(--emerald);">
+          <div class="stage-name">Release Safely</div>
+          <div class="stage-detail">
+            <h3>Apply ops changes only when evidence and guardrails agree.</h3>
+            <p>Temporal coordinates shadow tests, canary traffic, operator review, automatic promotion, and rollback when search quality, latency, or business metrics degrade.</p>
+            <ul><li>Shadow</li><li>5% canary</li><li>Approval</li><li>Audit</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     1. BUSINESS USE CASES
+     ═══════════════════════════════════════════ -->
+<section id="use-cases">
+  <div class="container">
+    <div class="reveal visible">
+      <div class="section-label">01 — Ops Use Cases</div>
+      <h2>Ops Tasks Around<br>Grid Dynamics AI Search</h2>
+      <p class="lead">AI Search capabilities create operational surface area after launch. Magellan automates the repetitive work a search platform team must keep doing: detect drift, prepare fixes, evaluate changes, route approvals, and release safely.</p>
+    </div>
+
+    <div class="usecase-grid">
+      <div class="usecase-card reveal reveal-delay-1 visible" style="--card-accent: var(--orange)">
+        <div class="usecase-icon" style="background: var(--orange-dim); color: var(--orange);">SE</div>
+        <h4>Semantic Index Refresh Ops</h4>
+        <p>Detect stale embeddings after catalog changes, scope the affected query clusters, schedule re-indexing, and attach before/after relevance evidence.</p>
+      </div>
+      <div class="usecase-card reveal reveal-delay-2 visible" style="--card-accent: var(--teal)">
+        <div class="usecase-icon" style="background: var(--teal-dim); color: var(--teal);">PR</div>
+        <h4>Catalog Enrichment QA</h4>
+        <p>Find missing attributes, weak titles, taxonomy gaps, and image/text inconsistencies before they degrade semantic search and product selection.</p>
+      </div>
+      <div class="usecase-card reveal reveal-delay-3 visible" style="--card-accent: var(--indigo)">
+        <div class="usecase-icon" style="background: var(--indigo-dim); color: var(--indigo);">AR</div>
+        <h4>Smart Autocomplete Tuning</h4>
+        <p>Cluster typos, slang, trending terms, and zero-result prefixes into reviewed synonym and suggestion packs for autocomplete releases.</p>
+      </div>
+      <div class="usecase-card reveal reveal-delay-1 visible" style="--card-accent: var(--emerald)">
+        <div class="usecase-icon" style="background: var(--emerald-dim); color: var(--emerald);">QM</div>
+        <h4>Personalization Guardrails</h4>
+        <p>Monitor budgets, brand preferences, session behavior, and repeat-visit patterns so personalization improves relevance without overfitting or biasing inventory.</p>
+      </div>
+      <div class="usecase-card reveal reveal-delay-2 visible" style="--card-accent: var(--indigo)">
+        <div class="usecase-icon" style="background: var(--indigo-dim); color: var(--indigo);">IF</div>
+        <h4>JIT Recommendation Ops</h4>
+        <p>Evaluate result summaries, feature callouts, comparison prompts, and intent-refinement suggestions before they influence purchase decisions.</p>
+      </div>
+      <div class="usecase-card reveal reveal-delay-3 visible" style="--card-accent: var(--orange)">
+        <div class="usecase-icon" style="background: var(--orange-dim); color: var(--orange);">ZM</div>
+        <h4>MXP Rule Governance</h4>
+        <p>Version, test, approve, and rollback synonyms, acronyms, boosts, suppressions, campaigns, and merchandising rules from the MXP control surface.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     2. BUSINESS SCENARIOS
+     ═══════════════════════════════════════════ -->
+<section id="scenarios" style="background: var(--white);">
+  <div class="container">
+    <div class="reveal visible">
+      <div class="section-label">02 — Ops Scenarios</div>
+      <h2>From Search Signal to<br>Approved Ops Change</h2>
+      <p class="lead">Every scenario follows the same harness pattern: capture an operational signal, diagnose the affected AI Search capability, generate a runbook, and release the fix through measured controls.</p>
+    </div>
+
+    <!-- Overview Flow -->
+    <div class="scenario-flow reveal visible">
+      <div class="flow-step">
+        <div class="flow-dot" style="background: var(--orange);">1</div>
+        <h4 style="color: var(--orange);">Signal</h4>
+        <p>Catalog deltas, failed queries, low CTR, stale suggestions, rule conflicts</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot" style="background: var(--teal);">2</div>
+        <h4 style="color: var(--teal);">Diagnosis</h4>
+        <p>Map symptoms to semantic search, catalog QA, autocomplete, personalization, or MXP</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot" style="background: var(--emerald);">3</div>
+        <h4 style="color: var(--emerald);">Runbook</h4>
+        <p>Generate proposed fix, eval set, owner, approval gate, and rollback plan</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot" style="background: var(--indigo);">4</div>
+        <h4 style="color: var(--indigo);">Release</h4>
+        <p>Shadow test, canary, monitor, promote, annotate, or rollback</p>
+      </div>
+    </div>
+
+    <!-- Scenario A -->
+    <div class="scenario-detail reveal visible">
+      <div class="scenario-detail-header">
+        <span class="scenario-badge" style="background: var(--orange-dim); color: var(--orange);">Scenario A</span>
+        <h3 style="margin: 0; font-size: 1.15rem;">Catalog Update Breaks Semantic Retrieval</h3>
+      </div>
+      <div class="scenario-detail-body">
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--orange);">Signal</div>
+          <p>New seasonal trail shoes ship with missing waterproof and terrain attributes.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--teal);">Harness Work</div>
+          <p>Detect catalog completeness gap → cluster impacted queries → propose enrichment patch → scope embedding refresh.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--emerald);">Runbook</div>
+          <p>Catalog fix ticket, targeted re-embedding job, benchmark query set, and rollback target.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--indigo);">Release</div>
+          <p>Shadow eval passes, 5% canary starts, conversion and zero-result metrics monitored.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario B -->
+    <div class="scenario-detail reveal visible">
+      <div class="scenario-detail-header">
+        <span class="scenario-badge" style="background: var(--teal-dim); color: var(--teal);">Scenario B</span>
+        <h3 style="margin: 0; font-size: 1.15rem;">Autocomplete Misses a Demand Trend</h3>
+      </div>
+      <div class="scenario-detail-body">
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--orange);">Signal</div>
+          <p>Mobile searches for "hybrid work backpack" and related prefixes show rising exits.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--teal);">Harness Work</div>
+          <p>Cluster failed prefixes → mine catalog and query logs → generate synonym/autocomplete candidates → estimate business impact.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--emerald);">Runbook</div>
+          <p>Suggestion pack, typo/slang mapping, MXP synonym proposal, and CTR guardrail.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--indigo);">Release</div>
+          <p>Merchandising owner approves, suggestions canary on mobile, exits and CTR tracked.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario C -->
+    <div class="scenario-detail reveal visible">
+      <div class="scenario-detail-header">
+        <span class="scenario-badge" style="background: var(--emerald-dim); color: var(--emerald);">Scenario C</span>
+        <h3 style="margin: 0; font-size: 1.15rem;">Merchandising Rule Conflict</h3>
+      </div>
+      <div class="scenario-detail-body">
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--orange);">Trigger</div>
+          <p>A campaign boost promotes low-stock products and suppresses higher-converting substitutes.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--teal);">Harness Work</div>
+          <p>Compare MXP rule diffs, inventory, conversion, and query cluster performance; isolate the conflicting boost rule.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--emerald);">Runbook</div>
+          <p>Rollback candidate, substitute boost proposal, business impact note, and approval request.</p>
+        </div>
+        <div class="scenario-col">
+          <div class="scenario-col-label" style="color: var(--indigo);">Release</div>
+          <p>Traffic ramp pauses, owner approves rollback, dashboard annotation records the incident and fix.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="feedback-loop reveal visible">
+      <span class="icon">FB</span>
+      Ops feedback updates runbook thresholds, query-cluster watchlists, and approval routing after each release.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     3. DATA FLOW DIAGRAM
+     ═══════════════════════════════════════════ -->
+<section id="data-flow">
+  <div class="container">
+    <div class="reveal visible">
+      <div class="section-label">03 — Data Flow Diagram</div>
+      <h2>How Ops Work Moves Through<br>the Harness Pipeline</h2>
+      <p class="lead">Five layers turn AI Search telemetry into governed operational work: signal capture, diagnosis, runbook generation, controlled release, and feedback into future thresholds.</p>
+    </div>
+
+    <div class="dataflow-layers">
+      <div class="df-layer reveal reveal-delay-1 visible">
+        <div class="df-layer-name" style="background: var(--orange);"><span class="icon">IN</span> Ingestion</div>
+        <div class="df-layer-content">AI Search events, catalog deltas, query logs, voice/image search attempts, UGC and reviews, inventory changes, MXP rule diffs</div>
+      </div>
+      <div class="df-arrow reveal visible">↓</div>
+      <div class="df-layer reveal reveal-delay-2 visible">
+        <div class="df-layer-name" style="background: var(--teal);"><span class="icon">DG</span> Diagnosis</div>
+        <div class="df-layer-content">Query-cluster analysis, catalog completeness scoring, autocomplete failure grouping, personalization guardrail checks, rule conflict detection</div>
+      </div>
+      <div class="df-arrow reveal visible">↓</div>
+      <div class="df-layer reveal reveal-delay-3 visible">
+        <div class="df-layer-name" style="background: var(--indigo);"><span class="icon">RB</span> Runbook</div>
+        <div class="df-layer-content">LLM/RLM-assisted root-cause summary, candidate catalog fix, synonym pack, re-index plan, MXP rule proposal, eval suite, owner routing</div>
+      </div>
+      <div class="df-arrow reveal visible">↓</div>
+      <div class="df-layer reveal reveal-delay-4 visible">
+        <div class="df-layer-name" style="background: var(--emerald);"><span class="icon">RL</span> Release</div>
+        <div class="df-layer-content">Grid Dynamics AI Search adapters for semantic search, catalog optimization, smart autocomplete, personalization, JIT recommendations, and MXP rules</div>
+      </div>
+      <div class="df-arrow reveal visible">↓</div>
+      <div class="df-layer reveal reveal-delay-5 visible">
+        <div class="df-layer-name" style="background: var(--navy);"><span class="icon">FB</span> Feedback</div>
+        <div class="df-layer-content">Canary telemetry, CTR, conversion, zero-result rate, latency, inventory impact, approval history → threshold tuning and watchlist updates</div>
+      </div>
+    </div>
+
+    <div class="feedback-loop reveal visible">
+      <span class="icon">FB</span>
+      Feedback loop closes the circle: each release updates watchlists, thresholds, eval coverage, and approval policies for the next ops cycle.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     4. CONTEXT ENGINEERING
+     ═══════════════════════════════════════════ -->
+<section id="context" class="dark-section">
+  <div class="container">
+    <div class="reveal visible">
+      <div class="section-label" style="color: var(--orange);">04 — Context Engineering</div>
+      <h2>Runbook Context,<br>Approvals &amp; Evidence</h2>
+      <p class="lead">How the harness assembles enough context to diagnose an AI Search ops issue, generate a safe runbook, and route the change through approvals.</p>
+    </div>
+
+    <!-- Turn 1 Context Window -->
+    <h3 style="color: var(--orange); margin-top: 3rem;" class="reveal visible">Turn 1 — Initial Context Assembly</h3>
+    <div class="context-blocks reveal visible">
+      <div class="ctx-block" style="border-color: var(--orange);">
+        <div class="ctx-label" style="color: var(--orange);">Runbook Policy</div>
+        <div class="ctx-content" style="color: var(--gray-400);">Allowed actions, approval rules, rollback requirements, and protected AI Search surfaces</div>
+      </div>
+      <div class="ctx-block" style="border-color: var(--teal);">
+        <div class="ctx-label" style="color: var(--teal);">Ops Signal</div>
+        <div class="ctx-content" style="color: var(--gray-400);">Failed query cluster, catalog delta, autocomplete miss, multimodal failure, or MXP rule conflict</div>
+      </div>
+      <div class="ctx-block" style="border-color: var(--indigo);">
+        <div class="ctx-label" style="color: var(--indigo);">Capability Map</div>
+        <div class="ctx-content" style="color: var(--gray-400);">Semantic search, catalog optimization, smart autocomplete, personalization, JIT recommendations, MXP rules</div>
+      </div>
+      <div class="ctx-block" style="border-color: var(--emerald);">
+        <div class="ctx-label" style="color: var(--emerald);">Evidence Pack</div>
+        <div class="ctx-content" style="color: var(--gray-400);">Catalog rows, product embeddings, query logs, inventory state, reviews, baseline metrics, owner history</div>
+      </div>
+      <div class="ctx-block" style="border-color: var(--navy-mid);">
+        <div class="ctx-label" style="color: var(--gray-300);">Tool Calls</div>
+        <div class="ctx-content" style="color: var(--gray-400);">catalog QA → gaps, eval factory → scores, MXP adapter → rule diff, Temporal → workflow state</div>
+      </div>
+    </div>
+
+    <!-- Temporal + RLMs -->
+    <div class="two-panel reveal visible">
+      <div class="panel" style="background: rgba(242,237,225,0.04); border-color: rgba(242,237,225,0.08);">
+        <h4 style="color: var(--teal);"><span class="icon-chip" style="--accent: var(--teal);">TL</span> Temporal — Automated Approvals</h4>
+        <ol>
+          <li style="color: var(--gray-400);">Runbook triggered by catalog, query, autocomplete, or MXP signal</li>
+          <li style="color: var(--gray-400);">Automated validation: relevance, zero-result, latency, inventory, and business checks</li>
+          <li style="color: var(--gray-400);">Shadow test before canary traffic</li>
+          <li style="color: var(--gray-400);">Approval gate: auto-approve only for low-risk, metric-clean changes</li>
+          <li style="color: var(--gray-400);">Progressive rollout: 5% → 25% → 50% → 100%</li>
+          <li style="color: var(--gray-400);">Rollback activity if degradation detected</li>
+        </ol>
+      </div>
+      <div class="panel" style="background: rgba(242,237,225,0.04); border-color: rgba(242,237,225,0.08);">
+        <h4 style="color: var(--indigo);"><span class="icon-chip" style="--accent: var(--indigo);">AI</span> RLMs (with CodeAct Execution)</h4>
+        <ol>
+          <li style="color: var(--gray-400);">Decompose ops incidents into affected capability, data gap, metric impact, and owner path</li>
+          <li style="color: var(--gray-400);">Each sub-task gets a focused evidence window</li>
+          <li style="color: var(--gray-400);">CodeAct executes eval scripts, statistical analysis, catalog diffs, and rule diffs</li>
+          <li style="color: var(--gray-400);">Results folded back into parent context</li>
+          <li style="color: var(--gray-400);">Handles multi-signal incidents across catalog, semantic retrieval, autocomplete, and merchandising controls</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Follow-up Context -->
+    <div class="callout reveal visible" style="background: rgba(122,46,30,0.08); margin-top: 3rem;">
+      <div class="callout-label">Example — RLM Decomposition</div>
+      <p style="color: var(--gray-300);"><strong style="color: var(--white);">Incident:</strong> "waterproof trail shoe queries are failing after the spring catalog refresh"</p>
+      <p style="color: var(--gray-400); margin-top: 0.5rem;">RLM decomposes: <span style="color: var(--teal);">[catalog delta]</span> → <span style="color: var(--orange);">[attribute gaps]</span> → <span style="color: var(--emerald);">[semantic index freshness]</span> → <span style="color: var(--indigo);">[MXP rule conflicts]</span> → runbook + eval + canary</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     5. USER FLOW DIAGRAM
+     ═══════════════════════════════════════════ -->
+<section id="user-flow">
+  <div class="container">
+    <div class="reveal visible">
+      <div class="section-label">05 — Ops Flow Diagram</div>
+      <h2>End-to-End Journey from<br>Incident to Controlled Release</h2>
+      <p class="lead">Six stages trace the operator path through Magellan: detect an AI Search issue, diagnose it, generate a runbook, evaluate it, release it, and learn from the outcome.</p>
+    </div>
+
+    <div class="userflow-steps">
+      <div class="uf-step reveal reveal-delay-1 visible" style="--step-color: var(--orange);">
+        <div class="uf-icon" style="background: var(--orange-dim); color: var(--orange);">SG</div>
+        <h5 style="color: var(--orange);">Signal</h5>
+        <p>Catalog, query, autocomplete, or rule anomaly arrives</p>
+      </div>
+      <div class="uf-step reveal reveal-delay-2 visible" style="--step-color: var(--teal);">
+        <div class="uf-icon" style="background: var(--teal-dim); color: var(--teal);">DG</div>
+        <h5 style="color: var(--teal);">Diagnose</h5>
+        <p>Affected AI Search capability and root cause identified</p>
+      </div>
+      <div class="uf-step reveal reveal-delay-3 visible" style="--step-color: var(--indigo);">
+        <div class="uf-icon" style="background: var(--indigo-dim); color: var(--indigo);">RB</div>
+        <h5 style="color: var(--indigo);">Runbook</h5>
+        <p>Candidate fix, owner, eval set, and rollback plan created</p>
+      </div>
+      <div class="uf-step reveal reveal-delay-4 visible" style="--step-color: var(--emerald);">
+        <div class="uf-icon" style="background: var(--emerald-dim); color: var(--emerald);">EV</div>
+        <h5 style="color: var(--emerald);">Evaluate</h5>
+        <p>Offline, shadow, latency, and business guardrails run</p>
+      </div>
+      <div class="uf-step reveal reveal-delay-5 visible" style="--step-color: var(--navy);">
+        <div class="uf-icon" style="background: rgba(27,42,74,0.1); color: var(--navy);">RL</div>
+        <h5 style="color: var(--navy);">Release</h5>
+        <p>Approval, canary, dashboard annotation, or rollback</p>
+      </div>
+      <div class="uf-step reveal reveal-delay-5 visible" style="--step-color: var(--orange);">
+        <div class="uf-icon" style="background: var(--orange-dim); color: var(--orange);">FB</div>
+        <h5 style="color: var(--orange);">Learn</h5>
+        <p>Thresholds, watchlists, and runbook templates updated</p>
+      </div>
+    </div>
+
+    <!-- Admin & Analytics Swimlanes -->
+    <div class="swimlane reveal visible" style="margin-top: 3rem;">
+      <div class="swimlane-header" style="background: var(--teal);">Operator Flow</div>
+      <div class="swimlane-body">
+        <div class="swimlane-cell"><h5>Configure Runbooks</h5><p>Select enabled ops automations</p></div>
+        <div class="swimlane-cell"><h5>Set Thresholds</h5><p>Define quality gates for auto-approval</p></div>
+        <div class="swimlane-cell"><h5>Review Evidence</h5><p>Inspect evals, owners, and risk</p></div>
+        <div class="swimlane-cell"><h5>Approve / Roll Back</h5><p>Control release and recovery actions</p></div>
+      </div>
+    </div>
+    <div class="swimlane reveal visible">
+      <div class="swimlane-header" style="background: var(--indigo);">Analytics Flow</div>
+      <div class="swimlane-body">
+        <div class="swimlane-cell"><h5>Query Clusters</h5><p>Trends, exits, zero-result queries</p></div>
+        <div class="swimlane-cell"><h5>Ops Metrics</h5><p>Runbook volume, eval pass rate, SLA</p></div>
+        <div class="swimlane-cell"><h5>Canary Results</h5><p>Change outcomes and statistical confidence</p></div>
+        <div class="swimlane-cell"><h5>Business Impact</h5><p>Conversion, inventory, revenue per search</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     6. SEQUENCE DIAGRAM
+     ═══════════════════════════════════════════ -->
+<section id="sequence" style="background: var(--white);">
+  <div class="container">
+    <div class="seq-intro reveal visible">
+      <div>
+        <div class="section-label">06 — Sequence Diagram</div>
+        <h2>Component Interactions for<br>an AI Search Ops Runbook</h2>
+        <p class="lead">The ops path separates live search serving from automated remediation, so Grid Dynamics AI Search stays stable while Magellan prepares, tests, and releases controlled changes.</p>
+      </div>
+      <div class="seq-legend" aria-label="Sequence legend">
+        <span>Solid = ops workflow</span>
+        <span>Dashed = telemetry feedback</span>
+        <span>Gates = promotion checks</span>
+      </div>
+    </div>
+
+    <div class="seq-diagram reveal visible">
+      <div class="seq-titlebar">
+        <h3>Runbook Creation Path</h3>
+        <span>Target: evidence before change</span>
+      </div>
+      <div class="seq-scroll">
+        <div class="seq-canvas" style="--cols: 6;">
+          <div class="seq-lifelines">
+            <div></div>
+            <div class="seq-lane" style="--accent: var(--orange);"><strong>AI Search</strong><span>Live solution</span></div>
+            <div class="seq-lane" style="--accent: var(--teal);"><strong>Ops Ledger</strong><span>Signals + diffs</span></div>
+            <div class="seq-lane" style="--accent: var(--indigo);"><strong>Diagnosis Engine</strong><span>Capability mapping</span></div>
+            <div class="seq-lane" style="--accent: var(--navy);"><strong>Runbook Factory</strong><span>Fix proposal</span></div>
+            <div class="seq-lane" style="--accent: var(--emerald);"><strong>Eval Factory</strong><span>Offline + shadow</span></div>
+            <div class="seq-lane" style="--accent: var(--cyan);"><strong>Temporal</strong><span>Approval + release</span></div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">1</div>
+            <div class="seq-arrow" style="--start: 1; --end: 2; --accent: var(--orange);"><span>emit ops signal</span></div>
+            <div class="seq-note" style="--col: 2;">Zero-result cluster, catalog delta, rule diff, or canary metric</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">2</div>
+            <div class="seq-arrow" style="--start: 2; --end: 3; --accent: var(--teal);"><span>classify issue</span></div>
+            <div class="seq-note" style="--col: 3;">Maps symptom to semantic search, catalog, autocomplete, personalization, or MXP</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">3</div>
+            <div class="seq-arrow" style="--start: 3; --end: 4; --accent: var(--indigo);"><span>generate runbook</span></div>
+            <div class="seq-note" style="--col: 4;">Candidate fix, evidence pack, owner, eval set, rollback plan</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">4</div>
+            <div class="seq-arrow reverse" style="--start: 3; --end: 4; --accent: var(--navy);"><span>root cause</span></div>
+            <div class="seq-note" style="--col: 3;">Attribute gap, stale index, weak suggestion, or rule conflict</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">5</div>
+            <div class="seq-arrow" style="--start: 4; --end: 5; --accent: var(--emerald);"><span>evaluate proposal</span></div>
+            <div class="seq-note" style="--col: 5;">Offline benchmark, shadow replay, latency, inventory, business guardrails</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">6</div>
+            <div class="seq-arrow reverse" style="--start: 4; --end: 5; --accent: var(--emerald);"><span>eval report</span></div>
+            <div class="seq-note" style="--col: 4;">Pass/fail, metric deltas, sample size, risk flags</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">7</div>
+            <div class="seq-arrow" style="--start: 5; --end: 6; --accent: var(--teal);"><span>start approval</span></div>
+            <div class="seq-note" style="--col: 6;">Route to search lead, merchandiser, or auto-approval policy</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">8</div>
+            <div class="seq-arrow async" style="--start: 1; --end: 6; --accent: var(--cyan);"><span>release telemetry</span></div>
+            <div class="seq-note" style="--col: 6;">Canary data updates runbook status without blocking live search</div>
+          </div>
+        </div>
+      </div>
+      <div class="seq-gates">
+        <div class="seq-gate"><strong>No Inline Mutation</strong><p>Magellan prepares fixes outside the live request path.</p></div>
+        <div class="seq-gate"><strong>Evidence Required</strong><p>Each runbook carries source signal, root cause, eval report, and rollback plan.</p></div>
+        <div class="seq-gate"><strong>Policy Guard</strong><p>Inventory, merchandising, latency, and business rules gate release.</p></div>
+        <div class="seq-gate"><strong>Ops Feedback</strong><p>Release telemetry updates thresholds and future watchlists.</p></div>
+      </div>
+    </div>
+
+    <div class="seq-diagram reveal visible">
+      <div class="seq-titlebar">
+        <h3>Controlled Release Loop</h3>
+        <span>Shadow + canary + rollback</span>
+      </div>
+      <div class="seq-scroll">
+        <div class="seq-canvas" style="--cols: 6;">
+          <div class="seq-lifelines">
+            <div></div>
+            <div class="seq-lane" style="--accent: var(--cyan);"><strong>Runbook</strong><span>Approved candidate</span></div>
+            <div class="seq-lane" style="--accent: var(--orange);"><strong>AI Search Adapter</strong><span>Catalog/MXP/index</span></div>
+            <div class="seq-lane" style="--accent: var(--teal);"><strong>Temporal</strong><span>Workflow control</span></div>
+            <div class="seq-lane" style="--accent: var(--indigo);"><strong>Observability</strong><span>Ops + business metrics</span></div>
+            <div class="seq-lane" style="--accent: var(--navy);"><strong>Audit Ledger</strong><span>Evidence history</span></div>
+            <div class="seq-lane" style="--accent: var(--emerald);"><strong>Traffic Router</strong><span>Shadow + canary</span></div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">1</div>
+            <div class="seq-arrow" style="--start: 1; --end: 2; --accent: var(--cyan);"><span>apply candidate</span></div>
+            <div class="seq-note" style="--col: 2;">Catalog patch, synonym pack, index refresh, or MXP rule change</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">2</div>
+            <div class="seq-arrow" style="--start: 1; --end: 3; --accent: var(--orange);"><span>start workflow</span></div>
+            <div class="seq-note" style="--col: 3;">Approval state, release window, rollback activity</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">3</div>
+            <div class="seq-arrow" style="--start: 3; --end: 6; --accent: var(--teal);"><span>shadow replay</span></div>
+            <div class="seq-note" style="--col: 6;">Mirrored traffic validates behavior before real users see it</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">4</div>
+            <div class="seq-arrow" style="--start: 6; --end: 4; --accent: var(--indigo);"><span>collect telemetry</span></div>
+            <div class="seq-note" style="--col: 4;">CTR, conversion, zero-result rate, latency, inventory impact</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">5</div>
+            <div class="seq-arrow reverse" style="--start: 1; --end: 5; --accent: var(--navy);"><span>write audit</span></div>
+            <div class="seq-note" style="--col: 1;">Source signal, evidence, approver, rollout state, rollback plan</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">6</div>
+            <div class="seq-arrow" style="--start: 3; --end: 6; --accent: var(--emerald);"><span>canary 5% → 25% → 100%</span></div>
+            <div class="seq-note" style="--col: 6;">Promotion only when live metrics beat baseline</div>
+          </div>
+          <div class="seq-row">
+            <div class="seq-index">7</div>
+            <div class="seq-arrow reverse async" style="--start: 2; --end: 6; --accent: var(--rose);"><span>rollback signal</span></div>
+            <div class="seq-note" style="--col: 3;">Automatic rollback on search quality, latency, inventory, or conversion regression</div>
+          </div>
+        </div>
+      </div>
+      <div class="seq-gates">
+        <div class="seq-gate"><strong>Auto-Approve</strong><p>Allowed only for low-risk ops changes with clean evals and enough sample size.</p></div>
+        <div class="seq-gate"><strong>Manual Review</strong><p>Required for ambiguous clusters, brand-sensitive rules, or high business impact.</p></div>
+        <div class="seq-gate"><strong>Shadow First</strong><p>High-risk catalog, autocomplete, and MXP changes run on mirrored traffic before canary.</p></div>
+        <div class="seq-gate"><strong>Audit Trail</strong><p>Every released runbook links to signal, evidence, approver, and rollback plan.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     7. UI SCREENS
+     ═══════════════════════════════════════════ -->
+<section id="ui-screens">
+  <div class="container">
+    <div class="reveal visible">
+      <div class="section-label">07 — UI Screens (Examples)</div>
+      <h2>Magellan AI Search<br>Ops Console</h2>
+      <p class="lead">Example operator surfaces for reviewing AI Search incidents, catalog enrichment tasks, autocomplete packs, MXP rule changes, eval evidence, and canary status.</p>
+    </div>
+
+    <!-- Search UI Mockup -->
+    <div class="ui-mockup reveal visible">
+      <div class="ui-titlebar">
+        <div class="ui-window-controls">
+          <div class="ui-dot" style="background: #7A2E1E;"></div>
+          <div class="ui-dot" style="background: #D4A017;"></div>
+          <div class="ui-dot" style="background: #3D4A2E;"></div>
+          <span class="ui-url">magellan-ops.griddynamics.com</span>
+        </div>
+        <span class="ui-env">Ops Queue · 18 Open</span>
+      </div>
+      <div class="ui-body">
+        <div class="ui-shell">
+          <div class="ui-search-header">
+            <div class="ui-search-bar">
+              <input type="text" value="zero-result cluster: waterproof trail shoes" aria-label="Example AI Search ops signal" readonly="">
+              <button type="button">Review</button>
+            </div>
+            <div class="ui-segmented" aria-label="Search modes">
+              <span class="active">Runbooks</span>
+              <span>Evidence</span>
+              <span>Release</span>
+            </div>
+          </div>
+
+          <aside class="ui-sidebar">
+            <h4>Ops Filters</h4>
+            <div class="facet-group">
+              <div class="facet-title">Capability <span>AI Search</span></div>
+              <div class="facet-option selected">Semantic search <small>8</small></div>
+              <div class="facet-option">Smart autocomplete <small>5</small></div>
+            </div>
+            <div class="facet-group">
+              <div class="facet-title">Signal Type <span>triaged</span></div>
+              <div class="facet-option selected">Catalog gap <small>128</small></div>
+              <div class="facet-option selected">Zero-result cluster <small>96</small></div>
+              <div class="facet-option">MXP rule conflict <small>61</small></div>
+            </div>
+            <div class="facet-group">
+              <div class="facet-title">Release Risk</div>
+              <div class="trace-meter"><i style="--w: 68%;"></i></div>
+              <div class="facet-option selected">Approval required <small>med</small></div>
+            </div>
+          </aside>
+
+          <div class="ui-result-list">
+            <article class="result-card featured" style="--accent: var(--orange);">
+              <div class="result-visual">CQ</div>
+              <div class="result-main">
+                <h4>Catalog Attribute Enrichment</h4>
+                <p>Trail shoe products are missing waterproof and terrain attributes, causing semantic retrieval misses for high-intent queries.</p>
+                <div class="result-tags">
+                  <span>semantic search</span>
+                  <span>catalog gap</span>
+                  <span>128 SKUs</span>
+                  <span>eval ready</span>
+                </div>
+              </div>
+              <div class="result-score"><strong>92</strong><span>confidence</span></div>
+            </article>
+            <article class="result-card" style="--accent: var(--teal);">
+              <div class="result-visual">AC</div>
+              <div class="result-main">
+                <h4>Autocomplete Synonym Pack</h4>
+                <p>Failed prefixes and slang variants are grouped into a candidate suggestion update for mobile search.</p>
+                <div class="result-tags"><span>smart autocomplete</span><span>synonym pack</span><span>shadow test</span></div>
+              </div>
+              <div class="result-score"><strong>87</strong><span>confidence</span></div>
+            </article>
+            <article class="result-card" style="--accent: var(--indigo);">
+              <div class="result-visual">MX</div>
+              <div class="result-main">
+                <h4>MXP Rule Conflict</h4>
+                <p>Campaign boost is favoring low-stock products and suppressing better converting substitutes.</p>
+                <div class="result-tags"><span>merchandising</span><span>rollback candidate</span><span>owner review</span></div>
+              </div>
+              <div class="result-score"><strong>81</strong><span>confidence</span></div>
+            </article>
+          </div>
+
+          <aside class="ui-inspector">
+            <h4>Runbook Evidence</h4>
+            <div class="trace-row">
+              <strong>Impacted capability</strong>
+              <span>semantic search + catalog optimization</span>
+            </div>
+            <div class="trace-row">
+              <strong>Offline eval coverage</strong>
+              <div class="trace-meter"><i style="--w: 91%;"></i></div>
+              <span>waterproof trail cluster</span>
+            </div>
+            <div class="trace-row">
+              <strong>Business impact</strong>
+              <div class="trace-meter"><i style="--w: 72%;"></i></div>
+              <span>zero-result recovery</span>
+            </div>
+            <div class="trace-row">
+              <strong>Approval policy</strong>
+              <span>search lead + merchandising owner</span>
+            </div>
+            <div class="trace-row">
+              <strong>Release hook</strong>
+              <span>runbook_id: ops-4f72</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin + Analytics side by side -->
+    <div class="ui-console-grid reveal visible">
+      <div class="admin-card">
+        <div class="console-head">
+          <h4>Admin Console · Runbook Registry</h4>
+          <span class="ui-badge" style="background: var(--emerald-dim); color: var(--emerald);">5 active</span>
+        </div>
+        <div class="skill-table">
+          <div class="skill-row"><strong>catalog-enrichment-qa</strong><small>Catalog optimization · 128 SKU queue</small><span class="toggle on"></span></div>
+          <div class="skill-row"><strong>semantic-index-refresh</strong><small>Vector search · scoped re-embed ready</small><span class="toggle on"></span></div>
+          <div class="skill-row"><strong>autocomplete-tuning</strong><small>Smart autocomplete · synonym pack v7</small><span class="toggle on"></span></div>
+          <div class="skill-row"><strong>mxp-rule-governance</strong><small>Merchandising · approval required</small><span class="toggle on"></span></div>
+          <div class="skill-row"><strong>multimodal-input-qa</strong><small>Voice/image search · shadow only</small><span class="toggle"></span></div>
+        </div>
+        <div class="policy-grid">
+          <div class="policy-box"><strong>0.84</strong><span>Auto-approve NDCG floor</span></div>
+          <div class="policy-box"><strong>150ms</strong><span>P95 latency ceiling</span></div>
+          <div class="policy-box"><strong>5%</strong><span>Initial canary traffic</span></div>
+        </div>
+      </div>
+
+      <div class="analytics-card">
+        <div class="console-head">
+          <h4>Analytics Dashboard · Ops Health</h4>
+          <span class="ui-badge" style="background: var(--teal-dim); color: var(--teal);">last 24h</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-box"><strong>18</strong><span>Open runbooks · -6 today</span></div>
+          <div class="metric-box"><strong>0.87</strong><span>Eval pass rate · +3.2%</span></div>
+          <div class="metric-box"><strong>4.8%</strong><span>Zero-result rate · -12%</span></div>
+        </div>
+        <div class="chart-card">
+          <div class="console-head" style="margin-bottom: 0.25rem;">
+            <h4 style="font-size: 0.86rem;">Runbook Closure Trend</h4>
+            <span class="policy-chip">waterproof trail</span>
+          </div>
+          <div class="bar-chart" aria-hidden="true">
+            <i style="--h: 42%;"></i>
+            <i style="--h: 48%;"></i>
+            <i style="--h: 46%;"></i>
+            <i style="--h: 62%;"></i>
+            <i style="--h: 74%;"></i>
+            <i style="--h: 82%;"></i>
+            <i style="--h: 88%;"></i>
+            <i style="--h: 92%;"></i>
+          </div>
+        </div>
+        <div class="experiment-list" style="margin-top: 0.85rem;">
+          <div class="experiment-row"><div><strong>Canary: catalog enrichment patch</strong><p>Zero-result recovery improving with no latency regression.</p></div><span class="ui-badge" style="background: var(--emerald-dim); color: var(--emerald);">Promote</span></div>
+          <div class="experiment-row"><div><strong>Alert: MXP campaign conflict</strong><p>Boost rule is fighting inventory and conversion guardrails.</p></div><span class="ui-badge" style="background: var(--orange-dim); color: var(--orange);">Review</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     8. IMPLEMENTATION ROADMAP
+     ═══════════════════════════════════════════ -->
+<section id="roadmap" style="background: var(--white);">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">08 — Implementation Roadmap</div>
+      <h2>Build Plan for<br>AI Search Ops Automation</h2>
+      <p class="lead">A credible harness starts by instrumenting the existing AI Search solution, then adds runbook generation, eval coverage, and controlled release workflows around the highest-volume ops tasks.</p>
+    </div>
+
+    <div class="roadmap-grid">
+      <div class="roadmap-card reveal reveal-delay-1" style="--accent: var(--orange);">
+        <div class="phase">Phase 1</div>
+        <h3>AI Search Ops Signals</h3>
+        <p>Instrument the operational events needed to understand catalog, semantic search, autocomplete, personalization, and MXP health.</p>
+        <ul>
+          <li>Canonical ops event schema</li>
+          <li>Catalog and rule diff capture</li>
+          <li>Zero-result cluster ledger</li>
+        </ul>
+      </div>
+      <div class="roadmap-card reveal reveal-delay-2" style="--accent: var(--teal);">
+        <div class="phase">Phase 2</div>
+        <h3>Runbook Automation MVP</h3>
+        <p>Generate reviewed fixes for the first three ops loops: catalog enrichment, autocomplete tuning, and semantic index refresh.</p>
+        <ul>
+          <li>Root-cause summaries</li>
+          <li>Fix proposal templates</li>
+          <li>Owner and approval routing</li>
+        </ul>
+      </div>
+      <div class="roadmap-card reveal reveal-delay-3" style="--accent: var(--indigo);">
+        <div class="phase">Phase 3</div>
+        <h3>Evaluation + Shadow Factory</h3>
+        <p>Measure runbook proposals before release, using offline benchmarks, shadow traffic, latency checks, and business guardrails.</p>
+        <ul>
+          <li>Query-cluster eval suite</li>
+          <li>Latency and cost checks</li>
+          <li>Merchandising regression alerts</li>
+        </ul>
+      </div>
+      <div class="roadmap-card reveal reveal-delay-4" style="--accent: var(--emerald);">
+        <div class="phase">Phase 4</div>
+        <h3>Governed Release Ops</h3>
+        <p>Use Temporal to coordinate approvals, canaries, dashboard annotations, rollback drills, and audit history for AI Search ops changes.</p>
+        <ul>
+          <li>5/25/50/100 rollout ladder</li>
+          <li>Human override queue</li>
+          <li>Versioned runbook registry</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="governance-band reveal">
+      <div class="governance-item">
+        <strong>Guardrail</strong>
+        <p>No catalog, autocomplete, index, personalization, or MXP change can bypass relevance, latency, inventory, and business impact thresholds.</p>
+      </div>
+      <div class="governance-item">
+        <strong>Observability</strong>
+        <p>Every decision records source signal, affected AI Search capability, candidate fix, eval score, approver, and rollout state.</p>
+      </div>
+      <div class="governance-item">
+        <strong>Control</strong>
+        <p>Search leads and merchandisers retain approve, reject, pin, boost, suppress, and rollback controls when automation confidence is low.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     9. COMPONENTS
+     ═══════════════════════════════════════════ -->
+<section id="components" style="background: var(--white);">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">09 — Recommended Components</div>
+      <h2>Solution Surface &amp;<br>Ops Building Blocks</h2>
+      <p class="lead">The harness is composed of three layers: the Grid Dynamics AI Search capability surface, ops automation runbooks, and infrastructure for orchestration, evidence, and release control.</p>
+    </div>
+
+    <!-- Grid Dynamics AI Search Surface -->
+    <div class="comp-section reveal">
+      <div class="comp-section-title" style="color: var(--orange);">Grid Dynamics AI Search Surface</div>
+      <div class="comp-grid">
+        <div class="comp-card" data-role="Retrieval" style="--accent: var(--orange);">
+          <h4>Semantic Vector Search</h4>
+          <p>Understands imprecise queries and product meaning through semantic retrieval over catalog and engagement signals.</p>
+        </div>
+        <div class="comp-card" data-role="Catalog" style="--accent: var(--teal);">
+          <h4>Catalog Optimization</h4>
+          <p>Improves product data, titles, descriptions, attributes, and categorization for better discovery.</p>
+        </div>
+        <div class="comp-card" data-role="Multimodal" style="--accent: var(--indigo);">
+          <h4>Multimodal Search</h4>
+          <p>Supports text, voice, and image-based search flows that need separate QA and failure tracking.</p>
+        </div>
+        <div class="comp-card" data-role="Autocomplete" style="--accent: var(--emerald);">
+          <h4>Smart Autocomplete</h4>
+          <p>Uses catalog insights, query patterns, and customer behavior to predict intent in real time.</p>
+        </div>
+        <div class="comp-card" data-role="Personalization" style="--accent: var(--navy);">
+          <h4>Personalized Results</h4>
+          <p>Uses customer history and session data to align results and recommendations with shopper preferences.</p>
+        </div>
+        <div class="comp-card" data-role="Merchandising" style="--accent: var(--orange);">
+          <h4>MXP Merchandising Rules</h4>
+          <p>Maintains business control through synonyms, boosts, suppressions, campaigns, and targeted promotions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ops Automation Runbooks -->
+    <div class="comp-section reveal">
+      <div class="comp-section-title" style="color: var(--teal);">Ops Automation Runbooks</div>
+      <div class="comp-grid">
+        <div class="comp-card" data-role="Catalog QA" style="--accent: var(--orange);">
+          <h4>Catalog QA Agent</h4>
+          <p>Detects missing attributes, weak descriptions, taxonomy gaps, and media mismatches that degrade discovery.</p>
+        </div>
+        <div class="comp-card" data-role="Indexing" style="--accent: var(--teal);">
+          <h4>Semantic Index Refresh</h4>
+          <p>Scopes re-embedding and re-indexing work after catalog changes, seasonal shifts, or retrieval drift.</p>
+        </div>
+        <div class="comp-card" data-role="Autocomplete" style="--accent: var(--indigo);">
+          <h4>Autocomplete Tuning</h4>
+          <p>Generates reviewed suggestion and synonym packs from failed prefixes, typos, slang, and trending terms.</p>
+        </div>
+        <div class="comp-card" data-role="Rules" style="--accent: var(--emerald);">
+          <h4>MXP Rule Governance</h4>
+          <p>Versions, tests, approves, and rolls back synonyms, boosts, suppressions, and campaign rules.</p>
+        </div>
+        <div class="comp-card" data-role="Guardrails" style="--accent: var(--navy);">
+          <h4>Personalization Guardrails</h4>
+          <p>Monitors session, budget, brand, inventory, and preference effects before personalization changes expand.</p>
+        </div>
+        <div class="comp-card" data-role="UGC" style="--accent: var(--orange);">
+          <h4>UGC Signal Miner</h4>
+          <p>Extracts review and social chatter signals that can become catalog improvements or recommendation tests.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Infrastructure -->
+    <div class="comp-section reveal">
+      <div class="comp-section-title" style="color: var(--indigo);">Infrastructure</div>
+      <div class="comp-grid">
+        <div class="comp-card" data-role="Orchestration" style="--accent: var(--orange);">
+          <h4>Temporal</h4>
+          <p>Durable workflow engine for runbook execution, approvals, canaries, dashboard annotation, and rollback.</p>
+        </div>
+        <div class="comp-card" data-role="Quality" style="--accent: var(--teal);">
+          <h4>Eval Factory</h4>
+          <p>Automated evaluations for query clusters, autocomplete packs, catalog fixes, MXP rules, and business guardrails.</p>
+        </div>
+        <div class="comp-card" data-role="Management" style="--accent: var(--indigo);">
+          <h4>Runbook Registry</h4>
+          <p>Central catalog of ops automations with ownership, allowed actions, approval requirements, and versioning.</p>
+        </div>
+        <div class="comp-card" data-role="Data" style="--accent: var(--emerald);">
+          <h4>Signal Store</h4>
+          <p>Real-time and batch storage for query clusters, catalog deltas, rule diffs, canary metrics, and release evidence.</p>
+        </div>
+        <div class="comp-card" data-role="Storage" style="--accent: var(--navy);">
+          <h4>AI Search Adapters</h4>
+          <p>Connectors for semantic index refresh, autocomplete configuration, catalog enrichment, personalization guardrails, and MXP rules.</p>
+        </div>
+        <div class="comp-card" data-role="Messaging" style="--accent: var(--orange);">
+          <h4>Kafka / Event Bus</h4>
+          <p>Real-time event streaming for AI Search telemetry, clickstream, runbook events, approvals, and release outcomes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════ -->
+<footer>
+  <div class="brand-text"><strong>Grid Dynamics</strong> &nbsp;|&nbsp; Magellan AI Search Ops Harness</div>
+  <div class="footer-sub">Ops Automation Layer for Grid Dynamics AI Search · Capstone Project</div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════ -->
+<script>
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ─── Scroll Reveal ───
+const revealEls = document.querySelectorAll('.reveal');
+if (window.location.hash) {
+  revealEls.forEach(el => el.classList.add('visible'));
+}
+function revealVisibleNow() {
+  revealEls.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      el.classList.add('visible');
+    }
+  });
+}
+
+if ('IntersectionObserver' in window && !prefersReducedMotion) {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  revealEls.forEach(el => revealObserver.observe(el));
+  requestAnimationFrame(revealVisibleNow);
+  window.addEventListener('load', revealVisibleNow);
+  window.addEventListener('hashchange', revealVisibleNow);
+  setTimeout(revealVisibleNow, 250);
+} else {
+  revealEls.forEach(el => el.classList.add('visible'));
+}
+
+// ─── Nav progress, active state, and scroll effect ───
+let lastScroll = 0;
+let ticking = false;
+const nav = document.querySelector('nav');
+const progressBar = document.querySelector('.scroll-progress');
+const navLinks = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+const canAutoHideNav = window.matchMedia('(min-width: 900px)').matches && !prefersReducedMotion;
+
+function getHashTarget(hash) {
+  if (!hash || hash === '#') return null;
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch (error) {
+    return document.getElementById(hash.slice(1));
+  }
+}
+
+function updateNavChrome() {
+  const currentScroll = window.pageYOffset;
+  if (canAutoHideNav && currentScroll > lastScroll && currentScroll > 200) {
+    nav.style.transform = 'translateY(-100%)';
+  } else {
+    nav.style.transform = 'translateY(0)';
+  }
+  lastScroll = currentScroll;
+
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = scrollable > 0 ? (currentScroll / scrollable) * 100 : 0;
+  if (progressBar) progressBar.style.width = `${Math.min(progress, 100)}%`;
+  nav.style.background = currentScroll > 80 ? 'rgba(15,14,12,0.96)' : 'rgba(15,14,12,0.92)';
+  ticking = false;
+}
+
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    window.requestAnimationFrame(updateNavChrome);
+    ticking = true;
+  }
+}, { passive: true });
+updateNavChrome();
+
+if ('IntersectionObserver' in window) {
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      navLinks.forEach(link => {
+        const isActive = link.hash === `#${entry.target.id}`;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+          link.setAttribute('aria-current', 'true');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    });
+  }, { rootMargin: '-35% 0px -55% 0px', threshold: 0.01 });
+
+  navLinks
+    .map(link => getHashTarget(link.hash))
+    .filter(Boolean)
+    .forEach(section => sectionObserver.observe(section));
+}
+
+// ─── Smooth scroll for nav and hero links ───
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = getHashTarget(a.hash);
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+
+
+
+</body></html>

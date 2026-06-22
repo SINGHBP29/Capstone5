@@ -1,0 +1,13 @@
+langchain
+google-generativeai
+python-dotenv
+fast-rlm
+pydantic
+google-cloud-aiplatform
+lancedb
+numpy
+pandas
+pyarrow
+ranx
+temporalio
+httpx

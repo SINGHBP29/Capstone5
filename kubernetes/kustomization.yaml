@@ -1,0 +1,12 @@
+# kubernetes/kustomization.yaml
+# This file is used by Kustomize to manage Kubernetes configurations.
+# It allows for easy layering and customization of deployments.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# List of resource files to be included in the deployment
+resources:
+  - deployment-primary.yaml
+  - deployment-canary.yaml
+  - service.yaml
